@@ -2,7 +2,7 @@
     <img src=".github/resources/archive.png" alt="logo" />
 </div>
 
-# Blue Archive Asset Extractor
+# Blue Archive - Asset Extractor
 A tool and library that extracts **Blue Archive** assets.
 
 
