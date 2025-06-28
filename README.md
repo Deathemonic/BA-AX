@@ -46,6 +46,11 @@ cargo build
 baad = { git = "https://github.com/Deathemonic/BA-AX" }
 ```
 
+### Other Projects
+- [BA-AD](https://github.com/Deathemonic/BA-AD): A tool and library that downloads the latest **Blue Archive** assets.
+- [BA-CY](https://github.com/Deathemonic/BA-CY): Library for handling **Blue Archive** catalogs, tables, serialization/deserialization, encryption, and hashing.
+
+
 ### Acknowledgement
 - [respectZ/blue-archive-viewer](https://github.com/respectZ/blue-archive-viewer)
 
