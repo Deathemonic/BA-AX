@@ -11,9 +11,16 @@ path = "src/lib.rs"
 name = "baax"
 path = "src/main.rs"
 
+[features]
+default = []
+no_logs = [ "baad-core/no_logs" ]
+no_debug = [ "baad-core/no_debug" ]
+no_error = [ "baad-core/no_error" ]
+
 [dependencies]
 anyhow = "1.0.98"
-baad = { git = "https://github.com/Deathemonic/BA-AD", version = "2.0.2" }
-bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "1.3.2" }
-clap = "4.5.40"
+clap = { version = "4.5.40", features = ["derive"] }
 tokio = { version = "1.45.1", features = ["full"] }
+
+bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "1.3.2" }
+baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "0.0.2" }
