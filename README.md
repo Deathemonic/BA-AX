@@ -14,7 +14,7 @@ A tool and library that extracts **Blue Archive** assets.
 ### Release
 You can download the latest pre-build binaries at [Releases](https://github.com/Deathemonic/BA-AX/releases)
 
-[Windows](https://github.com/Deathemonic/BA-AX/releases/download/v0.1.0/baax-windows-x86_64.zip) | [Linux](https://github.com/Deathemonic/BA-AX/releases/download/v0.1.0/baax-linux-x86_64.zip) | [MacOS](https://github.com/Deathemonic/BA-AX/releases/download/v0.1.0/baax-macos-aarch64.zip)
+[Windows](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-windows-x86_64.zip) | [Linux](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-linux-x86_64.zip) | [MacOS](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-macos-aarch64.zip)
 
 ### Cargo
 ```shell
@@ -48,6 +48,7 @@ baad = { git = "https://github.com/Deathemonic/BA-AX" }
 
 ### Other Projects
 - [BA-AD](https://github.com/Deathemonic/BA-AD): A tool and library that downloads the latest **Blue Archive** assets.
+- [BA-FB](https://github.com/Deathemonic/BA-FB): A tool for dumping and generating **Blue Archive** flatbuffers.
 - [BA-CY](https://github.com/Deathemonic/BA-CY): Library for handling **Blue Archive** catalogs, tables, serialization/deserialization, encryption, and hashing.
 
 
