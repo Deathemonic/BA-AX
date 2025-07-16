@@ -14,7 +14,7 @@ A tool and library that extracts **Blue Archive** assets.
 ### Release
 You can download the latest pre-build binaries at [Releases](https://github.com/Deathemonic/BA-AX/releases)
 
-[Windows](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-windows-x86_64.zip) | [Linux](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-linux-x86_64.zip) | [MacOS](https://github.com/Deathemonic/BA-FB/releases/latest/download/baax-macos-aarch64.zip)
+[Windows](https://github.com/Deathemonic/BA-AX/releases/latest/download/baax-windows-x86_64.zip) | [Linux](https://github.com/Deathemonic/BA-AX/releases/latest/download/baax-linux-x86_64.zip) | [MacOS](https://github.com/Deathemonic/BA-AX/releases/latest/download/baax-macos-aarch64.zip)
 
 ### Cargo
 ```shell
