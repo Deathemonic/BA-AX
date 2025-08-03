@@ -23,9 +23,14 @@ cargo install --git "https://github.com/Deathemonic/BA-AX" --locked --release
 
 ## Usage
 
-Extracting MediaResources
 ```shell
+# Extracting MediaResources
+
 baax extract media --input some/input/directory/file.zip --output some/output/directory
+
+# Extracting TableBundles
+baax extract table --input some/input/directory/file.zip --output some/output/directory
+baax extract table --input some/input/directory/file.db --output some/output/directory
 ```
 
 ## Building
