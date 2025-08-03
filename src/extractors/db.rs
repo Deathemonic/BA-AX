@@ -25,7 +25,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(path: P1, output: P2) 
         "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';",
     )?;
     let table_names: Vec<String> = stmt
-        .query_map([], |row| Ok(row.get::<_, String>(0)?))?
+        .query_map([], |row| row.get::<_, String>(0))?
         .collect::<std::result::Result<Vec<_>, rusqlite::Error>>()?;
 
     info!("Found {} tables in database", table_names.len());
@@ -52,7 +52,7 @@ async fn extract_db_bytes(
     table_name: &str,
     output_dir: &Path,
 ) -> Result<usize> {
-    let query = format!("SELECT Bytes FROM '{}'", table_name);
+    let query = format!("SELECT Bytes FROM '{table_name}'");
     let mut stmt = conn.prepare(&query)?;
 
     let mut count = 0;
@@ -64,7 +64,7 @@ async fn extract_db_bytes(
     for (index, row_result) in rows.enumerate() {
         match row_result {
             Ok(bytes) => {
-                let filename = format!("{}_{:04}.bytes", table_name, index);
+                let filename = format!("{table_name}_{index:04}.bytes");
                 let file_path = output_dir.join(filename);
 
                 tokio::fs::write(file_path, bytes).await?;
