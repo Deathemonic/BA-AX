@@ -25,13 +25,15 @@ cargo install --git "https://github.com/Deathemonic/BA-AX" --locked --release
 
 ```shell
 # Extracting MediaResources
-
 baax extract media --input some/input/directory/file.zip --output some/output/directory
 
 # Extracting TableBundles
 baax extract table --input some/input/directory/file.zip --output some/output/directory
 baax extract table --input some/input/directory/file.db --output some/output/directory
 ```
+
+> [!IMPORTANT]
+> Implementing flatdata is still a Work In Progress so decrypting bytes isn't possible for `BA-AX` right now. If you want to fully extract `TableBundles` you can use [BA-AD-py](https://github.com/Deathemonic/BA-AD/tree/743f69db3964f654bba33b6ce8ebd214010fd53d)
 
 ## Building
 
