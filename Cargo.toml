@@ -1,6 +1,6 @@
 [package]
 name = "baax"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 [lib]
@@ -11,20 +11,14 @@ path = "src/lib.rs"
 name = "baax"
 path = "src/main.rs"
 
-[features]
-default = []
-no_logs = [ "baad-core/no_logs" ]
-no_debug = [ "baad-core/no_debug" ]
-no_error = [ "baad-core/no_error" ]
-
 [dependencies]
-anyhow = "1.0.98"
-clap = { version = "4.5.42", features = ["derive"] }
+eyre = "0.6.12"
+clap = { version = "4.5.48", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["full"] }
 flatbuffers = { version = "25.2.10", features = ["serde", "serialize"] }
 serde = { version = "1.0.219", features = ["derive"] }
 rusqlite = { version = "0.37.0", features = ["bundled"] }
 
-bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "2.2.2" }
-baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "2.2.3" }
+bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "2.4.1" }
+baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "2.4.2" }
 

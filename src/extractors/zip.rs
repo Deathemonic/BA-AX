@@ -1,6 +1,6 @@
 use crate::extractors::db::extract_db;
 
-use anyhow::{Context, Result};
+use eyre::{ContextCompat, Result};
 use baad_core::{debug, info};
 use bacy::table_zip::TableZipFile;
 use std::path::Path;
@@ -21,9 +21,9 @@ pub async fn extract_zip<P1: AsRef<Path>, P2: AsRef<Path>>(
     let buf = fs::read(path).await?;
     let filename = path
         .file_name()
-        .context("Failed to get filename from path")?
+        .wrap_err_with(|| "Failed to get filename from path")?
         .to_str()
-        .context("Failed to convert filename to string")?;
+        .wrap_err_with(|| "Failed to convert filename to string")?;
 
     let zip_filename = if lowercase {
         filename.to_lowercase()
@@ -58,7 +58,7 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
         let entry = entry?;
         let path = entry.path();
 
-        let extension = path.extension().context("Failed to get file extension")?;
+        let extension = path.extension().wrap_err_with(|| "Failed to get file extension")?;
 
         match extension.to_str().unwrap_or("") {
             "zip" => {

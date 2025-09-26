@@ -1,38 +1,38 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "baax")]
 #[command(about = "Blue Archive Asset Extractor")]
-pub struct Cli {
+#[command(version)]
+pub struct Args {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
 
     /// Enable verbose logging
-    #[arg(short, long, global = true)]
+    #[arg(short, long)]
     pub verbose: bool,
 }
 
 #[derive(Subcommand)]
 pub enum Commands {
-    Extract(ExtractArgs),
-}
-
-#[derive(Args)]
-pub struct ExtractArgs {
-    #[command(subcommand)]
-    pub extract_type: ExtractType,
+    Extract {
+        #[command(subcommand)]
+        extract_type: ExtractType,
+    },
 }
 
 #[derive(Subcommand)]
 pub enum ExtractType {
+    /// Extract media resources
     Media(MediaArgs),
+    /// Extract table data
     Table(TableArgs),
 }
 
-#[derive(Args)]
-pub struct MediaArgs {
-    /// Input file or folder to extract media from
+#[derive(Parser)]
+pub struct BaseExtractArgs {
+    // Input file or folder to extract media from
     #[arg(short, long, value_name = "INPUT")]
     pub input: PathBuf,
 
@@ -41,13 +41,14 @@ pub struct MediaArgs {
     pub output: PathBuf,
 }
 
-#[derive(Args)]
-pub struct TableArgs {
-    /// Input file or folder to extract tables from
-    #[arg(short, long, value_name = "INPUT")]
-    pub input: PathBuf,
+#[derive(Parser)]
+pub struct MediaArgs {
+    #[command(flatten)]
+    pub base: BaseExtractArgs,
+}
 
-    /// Output file or folder for extracted tables
-    #[arg(short, long, value_name = "OUTPUT")]
-    pub output: PathBuf,
+#[derive(Parser)]
+pub struct TableArgs {
+    #[command(flatten)]
+    pub base: BaseExtractArgs,
 }

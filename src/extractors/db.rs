@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use eyre::{ContextCompat, Result};
 use baad_core::{debug, error, info, warn};
 use std::path::Path;
 use tokio::fs;
@@ -9,9 +9,9 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(path: P1, output: P2) 
     let path = path.as_ref();
     let filename = path
         .file_name()
-        .context("Failed to get filename from path")?
+        .wrap_err_with(|| "Failed to get filename from path")?
         .to_str()
-        .context("Failed to convert filename to string")?;
+        .wrap_err_with(|| "Failed to convert filename to string")?;
 
     let dir = output.as_ref().join(filename.trim_end_matches(".db"));
 
