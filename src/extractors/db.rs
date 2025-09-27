@@ -1,17 +1,21 @@
-use eyre::{ContextCompat, Result};
+use crate::helpers::ExtractError;
+
 use baad_core::{debug, error, info, warn};
 use std::path::Path;
 use tokio::fs;
 
-pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(path: P1, output: P2) -> Result<()> {
+pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
+    path: P1,
+    output: P2,
+) -> Result<(), ExtractError> {
     use rusqlite::Connection;
 
     let path = path.as_ref();
     let filename = path
         .file_name()
-        .wrap_err_with(|| "Failed to get filename from path")?
+        .ok_or(ExtractError::FileName)?
         .to_str()
-        .wrap_err_with(|| "Failed to convert filename to string")?;
+        .ok_or(ExtractError::FromString)?;
 
     let dir = output.as_ref().join(filename.trim_end_matches(".db"));
 
@@ -26,7 +30,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(path: P1, output: P2) 
     )?;
     let table_names: Vec<String> = stmt
         .query_map([], |row| row.get::<_, String>(0))?
-        .collect::<std::result::Result<Vec<_>, rusqlite::Error>>()?;
+        .collect::<Result<Vec<_>, rusqlite::Error>>()?;
 
     info!("Found {} tables in database", table_names.len());
 
@@ -51,7 +55,7 @@ async fn extract_db_bytes(
     conn: &rusqlite::Connection,
     table_name: &str,
     output_dir: &Path,
-) -> Result<usize> {
+) -> Result<usize, ExtractError> {
     let query = format!("SELECT Bytes FROM '{table_name}'");
     let mut stmt = conn.prepare(&query)?;
 

@@ -1,6 +1,6 @@
 use crate::extractors::db::extract_db;
+use crate::helpers::ExtractError;
 
-use eyre::{ContextCompat, Result};
 use baad_core::{debug, info};
 use bacy::table_zip::TableZipFile;
 use std::path::Path;
@@ -16,14 +16,14 @@ pub async fn extract_zip<P1: AsRef<Path>, P2: AsRef<Path>>(
     path: P1,
     output: P2,
     lowercase: bool,
-) -> Result<()> {
+) -> Result<(), ExtractError> {
     let path = path.as_ref();
     let buf = fs::read(path).await?;
     let filename = path
         .file_name()
-        .wrap_err_with(|| "Failed to get filename from path")?
+        .ok_or(ExtractError::FileName)?
         .to_str()
-        .wrap_err_with(|| "Failed to convert filename to string")?;
+        .ok_or(ExtractError::FromString)?;
 
     let zip_filename = if lowercase {
         filename.to_lowercase()
@@ -51,14 +51,14 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
     output: P2,
     mode: ExtractionMode,
     lowercase: bool,
-) -> Result<()> {
+) -> Result<(), ExtractError> {
     info!("Extracting {:?}...", mode);
 
     for entry in input.as_ref().read_dir()? {
         let entry = entry?;
         let path = entry.path();
 
-        let extension = path.extension().wrap_err_with(|| "Failed to get file extension")?;
+        let extension = path.extension().ok_or(ExtractError::FileExtension)?;
 
         match extension.to_str().unwrap_or("") {
             "zip" => {
