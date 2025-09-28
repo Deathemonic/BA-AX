@@ -1,6 +1,6 @@
 [package]
 name = "baax"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 
 [lib]
@@ -14,12 +14,12 @@ path = "src/main.rs"
 [dependencies]
 eyre = "0.6.12"
 clap = { version = "4.5.48", features = ["derive"] }
+thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["full"] }
 # flatbuffers = { version = "25.2.10", features = ["serde", "serialize"] }
 # serde = { version = "1.0.219", features = ["derive"] }
 rusqlite = { version = "0.37.0", features = ["bundled"] }
 
 bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "2.4.1" }
-baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "2.4.2" }
-thiserror = "2.0.16"
+baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "2.5.0" }
 
