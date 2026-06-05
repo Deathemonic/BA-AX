@@ -1,21 +1,20 @@
-use crate::cli::args::{Args, Commands, ExtractType, MediaArgs, TableArgs};
-use baax::extractors::db::extract_db;
-use baax::extractors::zip::{extract, extract_zip};
-use baax::extractors::ExtractionMode;
-
 use baad_core::info;
+use baax::extractors::ExtractionMode;
+use baax::extractors::db::extract_db;
+use baax::extractors::pack::{extract_all_packs, extract_pack};
+use baax::extractors::zip::{extract, extract_zip};
 use clap::CommandFactory;
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use tokio::fs;
 
+use crate::cli::args::{Args, Commands, ExtractType, MediaArgs, PackArgs, TableArgs};
+
 pub struct CommandHandler {
-    args: Args,
+    args: Args
 }
 
 impl CommandHandler {
-    fn new(args: Args) -> Result<Self> {
-        Ok(Self { args })
-    }
+    fn new(args: Args) -> Result<Self> { Ok(Self { args }) }
 
     async fn handle(&self) -> Result<()> {
         match &self.args.command {
@@ -31,6 +30,7 @@ impl CommandHandler {
         match extract_type {
             ExtractType::Media(media_args) => self.execute_media_extraction(media_args).await,
             ExtractType::Table(table_args) => self.execute_table_extraction(table_args).await,
+            ExtractType::Pack(pack_args) => self.execute_pack_extraction(pack_args).await
         }
     }
 
@@ -50,7 +50,7 @@ impl CommandHandler {
                 args.base.input.clone(),
                 args.base.output.clone(),
                 ExtractionMode::MediaResources,
-                true,
+                true
             )
             .await?;
         }
@@ -68,12 +68,7 @@ impl CommandHandler {
         let metadata = fs::metadata(&args.base.input).await?;
 
         if metadata.is_file() {
-            let extension = args
-                .base
-                .input
-                .extension()
-                .and_then(|ext| ext.to_str())
-                .unwrap_or("");
+            let extension = args.base.input.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
             match extension {
                 "zip" => {
@@ -91,9 +86,27 @@ impl CommandHandler {
                 args.base.input.clone(),
                 args.base.output.clone(),
                 ExtractionMode::Tables,
-                false,
+                false
             )
             .await?;
+        }
+
+        Ok(())
+    }
+
+    async fn execute_pack_extraction(&self, args: &PackArgs) -> Result<()> {
+        info!("Extracting Packs...");
+
+        if !args.base.output.exists() {
+            fs::create_dir_all(&args.base.output).await?;
+        }
+
+        let metadata = fs::metadata(&args.base.input).await?;
+
+        if metadata.is_file() {
+            extract_pack(args.base.input.clone(), args.base.output.clone()).await?;
+        } else if metadata.is_dir() {
+            extract_all_packs(args.base.input.clone(), args.base.output.clone()).await?;
         }
 
         Ok(())

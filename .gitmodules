@@ -1,4 +1,0 @@
-[submodule "src/flatdata"]
-	path = src/flatdata
-	url = https://github.com/Deathemonic/BA-FB
-	branch = flatdata

@@ -1,35 +1,29 @@
-use crate::extractors::db::extract_db;
-use crate::helpers::ExtractError;
+use std::path::Path;
 
 use baad_core::{debug, info};
-use bacy::table_zip::TableZipFile;
-use std::path::Path;
 use tokio::fs;
+
+use crate::error::ExtractError;
+use crate::extractors::db::extract_db;
+use crate::extractors::table::TableZipFile;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExtractionMode {
     MediaResources,
-    Tables,
+    Tables
 }
 
 pub async fn extract_zip<P1: AsRef<Path>, P2: AsRef<Path>>(
     path: P1,
     output: P2,
-    lowercase: bool,
+    lowercase: bool
 ) -> Result<(), ExtractError> {
     let path = path.as_ref();
     let buf = fs::read(path).await?;
-    let filename = path
-        .file_name()
-        .ok_or(ExtractError::FileName)?
-        .to_str()
-        .ok_or(ExtractError::FromString)?;
+    let filename =
+        path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
 
-    let zip_filename = if lowercase {
-        filename.to_lowercase()
-    } else {
-        filename.to_string()
-    };
+    let zip_filename = if lowercase { filename.to_lowercase() } else { filename.to_string() };
 
     let mut zip = TableZipFile::new(buf, zip_filename)?;
     let dir = output.as_ref().join(filename.trim_end_matches(".zip"));
@@ -50,7 +44,7 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
     input: P1,
     output: P2,
     mode: ExtractionMode,
-    lowercase: bool,
+    lowercase: bool
 ) -> Result<(), ExtractError> {
     info!("Extracting {:?}...", mode);
 

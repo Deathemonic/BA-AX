@@ -1,21 +1,19 @@
-use crate::helpers::ExtractError;
+use std::path::Path;
 
 use baad_core::{debug, error, info, warn};
-use std::path::Path;
 use tokio::fs;
+
+use crate::error::ExtractError;
 
 pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     path: P1,
-    output: P2,
+    output: P2
 ) -> Result<(), ExtractError> {
     use rusqlite::Connection;
 
     let path = path.as_ref();
-    let filename = path
-        .file_name()
-        .ok_or(ExtractError::FileName)?
-        .to_str()
-        .ok_or(ExtractError::FromString)?;
+    let filename =
+        path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
 
     let dir = output.as_ref().join(filename.trim_end_matches(".db"));
 
@@ -26,7 +24,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     let conn = Connection::open(path)?;
 
     let mut stmt = conn.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';",
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';"
     )?;
     let table_names: Vec<String> = stmt
         .query_map([], |row| row.get::<_, String>(0))?
@@ -54,7 +52,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
 async fn extract_db_bytes(
     conn: &rusqlite::Connection,
     table_name: &str,
-    output_dir: &Path,
+    output_dir: &Path
 ) -> Result<usize, ExtractError> {
     let query = format!("SELECT Bytes FROM '{table_name}'");
     let mut stmt = conn.prepare(&query)?;

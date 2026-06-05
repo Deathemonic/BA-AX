@@ -1,5 +1,6 @@
-use clap::{Parser, Subcommand};
 use std::path::PathBuf;
+
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(name = "baax")]
@@ -11,15 +12,15 @@ pub struct Args {
 
     /// Enable verbose logging
     #[arg(short, long)]
-    pub verbose: bool,
+    pub verbose: bool
 }
 
 #[derive(Subcommand)]
 pub enum Commands {
     Extract {
         #[command(subcommand)]
-        extract_type: ExtractType,
-    },
+        extract_type: ExtractType
+    }
 }
 
 #[derive(Subcommand)]
@@ -28,6 +29,8 @@ pub enum ExtractType {
     Media(MediaArgs),
     /// Extract table data
     Table(TableArgs),
+    /// Extract pack files
+    Pack(PackArgs)
 }
 
 #[derive(Parser)]
@@ -38,17 +41,23 @@ pub struct BaseExtractArgs {
 
     /// Output file or folder for extracted media
     #[arg(short, long, value_name = "OUTPUT")]
-    pub output: PathBuf,
+    pub output: PathBuf
 }
 
 #[derive(Parser)]
 pub struct MediaArgs {
     #[command(flatten)]
-    pub base: BaseExtractArgs,
+    pub base: BaseExtractArgs
 }
 
 #[derive(Parser)]
 pub struct TableArgs {
     #[command(flatten)]
-    pub base: BaseExtractArgs,
+    pub base: BaseExtractArgs
+}
+
+#[derive(Parser)]
+pub struct PackArgs {
+    #[command(flatten)]
+    pub base: BaseExtractArgs
 }
