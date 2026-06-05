@@ -26,6 +26,8 @@ cargo install --git "https://github.com/Deathemonic/BA-AX" --locked --release
 ```shell
 # Extracting MediaResources
 baax extract media --input some/input/directory/file.zip --output some/output/directory
+# Extracting Global PC MediaResources
+baax extract pack --input some/input/directory/file.molru --output some/output/directory
 
 # Extracting TableBundles
 baax extract table --input some/input/directory/file.zip --output some/output/directory
@@ -63,7 +65,9 @@ baad = { git = "https://github.com/Deathemonic/BA-AX" }
 ### Acknowledgement
 - [respectZ/blue-archive-viewer](https://github.com/respectZ/blue-archive-viewer)
 
-### Copyright
-Blue Archive is a registered trademark of NAT GAMES Co., Ltd., NEXON Korea Corp., and Yostar, Inc.
-This project is not affiliated with, endorsed by, or connected to NAT GAMES Co., Ltd., NEXON Korea Corp., NEXON GAMES Co., Ltd., IODivision, Yostar, Inc., or any of their subsidiaries or affiliates.
-All game assets, content, and materials are copyrighted by their respective owners and are used for informational and educational purposes only.
+---
+
+<sub>**Copyright** - Blue Archive is a registered trademark of NAT GAMES Co., Ltd., NEXON Korea Corp., and Yostar, Inc.
+This project is not affiliated with, endorsed by, or connected to NAT GAMES Co., Ltd., NEXON Korea Corp., NEXON GAMES
+Co., Ltd., IODivision, Yostar, Inc., or any of their subsidiaries or affiliates. All game assets, content, and materials
+are copyrighted by their respective owners and are used for informational and educational purposes only.</sub>
