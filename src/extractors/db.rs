@@ -7,7 +7,8 @@ use crate::error::ExtractError;
 
 pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     path: P1,
-    output: P2
+    output: P2,
+    key: Option<&str>
 ) -> Result<(), ExtractError> {
     use rusqlite::Connection;
 
@@ -17,15 +18,26 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
 
     let dir = output.as_ref().join(filename.trim_end_matches(".db"));
 
-    debug!(from=filename, to=%dir.display(), "Extracting SQLite DB");
+    debug!(from = filename, to = %dir.display(), "Extracting SQLite DB");
 
     fs::create_dir_all(&dir).await?;
 
     let conn = Connection::open(path)?;
 
-    let mut stmt = conn.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';"
-    )?;
+    if let Some(key) = key {
+        conn.execute_batch(&format!("PRAGMA key = '{}';", key))
+            .map_err(|_| ExtractError::SqlCipherKey)?;
+    }
+
+    let result = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';");
+
+    let mut stmt = match result {
+        Ok(stmt) => stmt,
+        Err(_) if key.is_some() => return Err(ExtractError::SqlCipherKey),
+        Err(_e) => return Err(ExtractError::SqlCipherRequired)
+    };
+
     let table_names: Vec<String> = stmt
         .query_map([], |row| row.get::<_, String>(0))?
         .collect::<Result<Vec<_>, rusqlite::Error>>()?;
@@ -40,7 +52,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
                 info!(table = table_name, count, "Extracted table successfully");
             }
             Err(e) => {
-                error!(table=table_name, error=%e, "Failed to extract table");
+                error!(table = table_name, error = %e, "Failed to extract table");
             }
         }
     }
@@ -68,12 +80,11 @@ async fn extract_db_bytes(
             Ok(bytes) => {
                 let filename = format!("{table_name}_{index:04}.bytes");
                 let file_path = output_dir.join(filename);
-
                 tokio::fs::write(file_path, bytes).await?;
                 count += 1;
             }
             Err(e) => {
-                warn!(table=table_name, index, error=%e, "Failed to extract row");
+                warn!(table = table_name, index, error = %e, "Failed to extract row");
             }
         }
     }

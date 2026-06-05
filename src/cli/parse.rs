@@ -50,7 +50,8 @@ impl CommandHandler {
                 args.base.input.clone(),
                 args.base.output.clone(),
                 ExtractionMode::MediaResources,
-                true
+                true,
+                None
             )
             .await?;
         }
@@ -75,7 +76,12 @@ impl CommandHandler {
                     extract_zip(args.base.input.clone(), args.base.output.clone(), false).await?;
                 }
                 "db" => {
-                    extract_db(args.base.input.clone(), args.base.output.clone()).await?;
+                    extract_db(
+                        args.base.input.clone(),
+                        args.base.output.clone(),
+                        args.key.as_deref()
+                    )
+                    .await?;
                 }
                 _ => {
                     return Err(eyre!("Unsupported file type: {}", extension));
@@ -86,7 +92,8 @@ impl CommandHandler {
                 args.base.input.clone(),
                 args.base.output.clone(),
                 ExtractionMode::Tables,
-                false
+                false,
+                args.key.as_deref()
             )
             .await?;
         }

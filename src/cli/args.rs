@@ -53,7 +53,11 @@ pub struct MediaArgs {
 #[derive(Parser)]
 pub struct TableArgs {
     #[command(flatten)]
-    pub base: BaseExtractArgs
+    pub base: BaseExtractArgs,
+
+    /// SQLCipher key for encrypted databases
+    #[arg(short, long, value_name = "KEY")]
+    pub key: Option<String>
 }
 
 #[derive(Parser)]

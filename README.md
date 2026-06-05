@@ -5,10 +5,6 @@
 # Blue Archive - Asset Extractor
 A tool and library that extracts **Blue Archive** assets.
 
-
-> [!WARNING]  
-> This is a work in progress project some features are missing 
-
 ## Install
 
 ### Release
@@ -34,9 +30,6 @@ baax extract table --input some/input/directory/file.zip --output some/output/di
 baax extract table --input some/input/directory/file.db --output some/output/directory
 ```
 
-> [!IMPORTANT]
-> Implementing flatdata is still a Work In Progress so decrypting bytes isn't possible for `BA-AX` right now. If you want to fully extract `TableBundles` you can use [BA-AD-py](https://github.com/Deathemonic/BA-AD/tree/743f69db3964f654bba33b6ce8ebd214010fd53d)
-
 ## Building
 
 1. Install [rustup](https://rustup.rs)
@@ -55,11 +48,21 @@ cargo build
 baad = { git = "https://github.com/Deathemonic/BA-AX" }
 ```
 
+### FAQ
+
+Why it doesn't do repack?
+> Sole purpose of `BA-AX` just just for extracting.
+
+Why there's no FlatBuffers and MemoryPack extract?
+> Adding those requires `BA-AX` to release a new version each time the game updates.
+> I need a way to have the Flatbuffer updates separate from `BA-AX`.
+
 ### Other Projects
 - [BA-AD](https://github.com/Deathemonic/BA-AD): A tool and library that downloads the latest **Blue Archive** assets.
 - [BA-MU](https://github.com/Deathemonic/BA-MU): A tool that re-dump AssetBundle for **Blue Archive**.
 - [BA-FB](https://github.com/Deathemonic/BA-FB): A tool for dumping and generating **Blue Archive** flatbuffers.
-- [BA-CY](https://github.com/Deathemonic/BA-CY): Library for handling **Blue Archive** catalogs, tables, serialization/deserialization, encryption, and hashing.
+- [BA-BR](https://github.com/Deathemonic/BA-BR): A tool that repacks AssetBundle for **Blue Archive**. 
+- [BA-CY](https://github.com/Deathemonic/BA-CY): A library for handling **Blue Archive** Cryptography.
 
 
 ### Acknowledgement

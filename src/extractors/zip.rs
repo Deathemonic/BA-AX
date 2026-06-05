@@ -44,7 +44,8 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
     input: P1,
     output: P2,
     mode: ExtractionMode,
-    lowercase: bool
+    lowercase: bool,
+    key: Option<&str>
 ) -> Result<(), ExtractError> {
     info!("Extracting {:?}...", mode);
 
@@ -59,7 +60,7 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
                 extract_zip(path, &output, lowercase).await?;
             }
             "db" if mode == ExtractionMode::Tables => {
-                extract_db(path, &output).await?;
+                extract_db(path, &output, key).await?;
             }
             _ => {
                 if mode == ExtractionMode::MediaResources && extension != "zip" {

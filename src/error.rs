@@ -36,5 +36,11 @@ pub enum ExtractError {
     InvalidFormat,
 
     #[error("Decryption failed")]
-    Crypto
+    Crypto,
+
+    #[error("Database is encrypted provide a key")]
+    SqlCipherRequired,
+
+    #[error("Could not decrypt database")]
+    SqlCipherKey
 }
