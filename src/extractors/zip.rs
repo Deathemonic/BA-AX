@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use baad_core::{debug, info};
+use eyre::{Result, eyre};
 use tokio::fs;
 
 use crate::error::ExtractError;
@@ -45,7 +46,8 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
     output: P2,
     mode: ExtractionMode,
     lowercase: bool,
-    key: Option<&str>
+    key: Option<&str>,
+    license: Option<&str>
 ) -> Result<(), ExtractError> {
     info!("Extracting {:?}...", mode);
 
@@ -53,22 +55,53 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
         let entry = entry?;
         let path = entry.path();
 
-        let extension = path.extension().ok_or(ExtractError::FileExtension)?;
-
-        match extension.to_str().unwrap_or("") {
-            "zip" => {
-                extract_zip(path, &output, lowercase).await?;
-            }
-            "db" if mode == ExtractionMode::Tables => {
-                extract_db(path, &output, key).await?;
-            }
-            _ => {
-                if mode == ExtractionMode::MediaResources && extension != "zip" {
-                    continue;
-                }
-            }
+        if path.is_file() && supports_file(&path, mode) {
+            extract_supported_file(path, &output, mode, lowercase, key, license).await?;
         }
     }
 
     Ok(())
+}
+
+pub async fn extract_file<P1: AsRef<Path>, P2: AsRef<Path>>(
+    path: P1,
+    output: P2,
+    mode: ExtractionMode,
+    lowercase: bool,
+    key: Option<&str>,
+    license: Option<&str>
+) -> Result<()> {
+    let path_ref = path.as_ref();
+
+    if !supports_file(path_ref, mode) {
+        let extension = path_ref.extension().and_then(|ext| ext.to_str()).unwrap_or("");
+        return Err(eyre!("Unsupported file type: {}", extension));
+    }
+
+    extract_supported_file(path, output, mode, lowercase, key, license).await?;
+    Ok(())
+}
+
+fn supports_file(path: &Path, mode: ExtractionMode) -> bool {
+    matches!(
+        (path.extension().and_then(|ext| ext.to_str()), mode),
+        (Some("zip"), _) | (Some("db"), ExtractionMode::Tables)
+    )
+}
+
+async fn extract_supported_file<P1: AsRef<Path>, P2: AsRef<Path>>(
+    path: P1,
+    output: P2,
+    mode: ExtractionMode,
+    lowercase: bool,
+    key: Option<&str>,
+    license: Option<&str>
+) -> Result<(), ExtractError> {
+    match path.as_ref().extension().and_then(|ext| ext.to_str()) {
+        Some("zip") => extract_zip(path, output, lowercase).await,
+        Some("db") if mode == ExtractionMode::Tables => {
+            extract_db(path, output, key, license).await
+        }
+        _ => unreachable!("extract_supported_file called with unsupported file")
+    }
 }

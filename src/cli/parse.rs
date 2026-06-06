@@ -1,10 +1,9 @@
 use baad_core::info;
 use baax::extractors::ExtractionMode;
-use baax::extractors::db::extract_db;
 use baax::extractors::pack::{extract_all_packs, extract_pack};
-use baax::extractors::zip::{extract, extract_zip};
+use baax::extractors::zip::{extract, extract_file};
 use clap::CommandFactory;
-use eyre::{Result, eyre};
+use eyre::Result;
 use tokio::fs;
 
 use crate::cli::args::{Args, Commands, ExtractType, MediaArgs, PackArgs, TableArgs};
@@ -16,25 +15,26 @@ pub struct CommandHandler {
 impl CommandHandler {
     fn new(args: Args) -> Result<Self> { Ok(Self { args }) }
 
-    async fn handle(&self) -> Result<()> {
-        match &self.args.command {
-            Some(Commands::Extract { extract_type }) => self.handle_extract(extract_type).await,
-            None => {
-                Args::command().print_help()?;
-                std::process::exit(0);
-            }
+    async fn handle(self) -> Result<()> {
+        let Some(command) = self.args.command else {
+            Args::command().print_help()?;
+            std::process::exit(0);
+        };
+
+        match command {
+            Commands::Extract { extract_type } => Self::handle_extract(extract_type).await
         }
     }
 
-    async fn handle_extract(&self, extract_type: &ExtractType) -> Result<()> {
+    async fn handle_extract(extract_type: ExtractType) -> Result<()> {
         match extract_type {
-            ExtractType::Media(media_args) => self.execute_media_extraction(media_args).await,
-            ExtractType::Table(table_args) => self.execute_table_extraction(table_args).await,
-            ExtractType::Pack(pack_args) => self.execute_pack_extraction(pack_args).await
+            ExtractType::Media(media_args) => Self::execute_media_extraction(media_args).await,
+            ExtractType::Table(table_args) => Self::execute_table_extraction(table_args).await,
+            ExtractType::Pack(pack_args) => Self::execute_pack_extraction(pack_args).await
         }
     }
 
-    async fn execute_media_extraction(&self, args: &MediaArgs) -> Result<()> {
+    async fn execute_media_extraction(args: MediaArgs) -> Result<()> {
         info!("Extracting MediaResources...");
 
         if !args.base.output.exists() {
@@ -44,13 +44,22 @@ impl CommandHandler {
         let metadata = fs::metadata(&args.base.input).await?;
 
         if metadata.is_file() {
-            extract_zip(args.base.input.clone(), args.base.output.clone(), true).await?;
-        } else if metadata.is_dir() {
-            extract(
-                args.base.input.clone(),
-                args.base.output.clone(),
+            extract_file(
+                args.base.input,
+                &args.base.output,
                 ExtractionMode::MediaResources,
                 true,
+                None,
+                None
+            )
+            .await?;
+        } else if metadata.is_dir() {
+            extract(
+                args.base.input,
+                args.base.output,
+                ExtractionMode::MediaResources,
+                true,
+                None,
                 None
             )
             .await?;
@@ -59,7 +68,7 @@ impl CommandHandler {
         Ok(())
     }
 
-    async fn execute_table_extraction(&self, args: &TableArgs) -> Result<()> {
+    async fn execute_table_extraction(args: TableArgs) -> Result<()> {
         info!("Extracting Tables...");
 
         if !args.base.output.exists() {
@@ -69,31 +78,23 @@ impl CommandHandler {
         let metadata = fs::metadata(&args.base.input).await?;
 
         if metadata.is_file() {
-            let extension = args.base.input.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-
-            match extension {
-                "zip" => {
-                    extract_zip(args.base.input.clone(), args.base.output.clone(), false).await?;
-                }
-                "db" => {
-                    extract_db(
-                        args.base.input.clone(),
-                        args.base.output.clone(),
-                        args.key.as_deref()
-                    )
-                    .await?;
-                }
-                _ => {
-                    return Err(eyre!("Unsupported file type: {}", extension));
-                }
-            }
-        } else if metadata.is_dir() {
-            extract(
-                args.base.input.clone(),
-                args.base.output.clone(),
+            extract_file(
+                args.base.input,
+                &args.base.output,
                 ExtractionMode::Tables,
                 false,
-                args.key.as_deref()
+                args.key.as_deref(),
+                args.license.as_deref()
+            )
+            .await?;
+        } else if metadata.is_dir() {
+            extract(
+                args.base.input,
+                args.base.output,
+                ExtractionMode::Tables,
+                false,
+                args.key.as_deref(),
+                args.license.as_deref()
             )
             .await?;
         }
@@ -101,7 +102,7 @@ impl CommandHandler {
         Ok(())
     }
 
-    async fn execute_pack_extraction(&self, args: &PackArgs) -> Result<()> {
+    async fn execute_pack_extraction(args: PackArgs) -> Result<()> {
         info!("Extracting Packs...");
 
         if !args.base.output.exists() {
@@ -111,9 +112,9 @@ impl CommandHandler {
         let metadata = fs::metadata(&args.base.input).await?;
 
         if metadata.is_file() {
-            extract_pack(args.base.input.clone(), args.base.output.clone()).await?;
+            extract_pack(args.base.input, args.base.output).await?;
         } else if metadata.is_dir() {
-            extract_all_packs(args.base.input.clone(), args.base.output.clone()).await?;
+            extract_all_packs(args.base.input, args.base.output).await?;
         }
 
         Ok(())
@@ -121,11 +122,6 @@ impl CommandHandler {
 }
 
 pub async fn run(args: Args) -> Result<()> {
-    if args.command.is_none() {
-        Args::command().print_help()?;
-        std::process::exit(0);
-    }
-
     let handler = CommandHandler::new(args)?;
     handler.handle().await
 }

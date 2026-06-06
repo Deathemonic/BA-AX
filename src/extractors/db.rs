@@ -1,6 +1,6 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use baad_core::{debug, error, info, warn};
+use baad_core::{debug, info, warn};
 use tokio::fs;
 
 use crate::error::ExtractError;
@@ -8,7 +8,8 @@ use crate::error::ExtractError;
 pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     path: P1,
     output: P2,
-    key: Option<&str>
+    key: Option<&str>,
+    license: Option<&str>
 ) -> Result<(), ExtractError> {
     use rusqlite::Connection;
 
@@ -24,8 +25,13 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
 
     let conn = Connection::open(path)?;
 
+    if let Some(license) = license {
+        conn.execute_batch(&format!("PRAGMA cipher_license = '{license}';\n"))
+            .map_err(|_| ExtractError::SqlCipherKey)?;
+    }
+
     if let Some(key) = key {
-        conn.execute_batch(&format!("PRAGMA key = '{}';", key))
+        conn.execute_batch(&format!("PRAGMA key = \"x'{key}'\";\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
     }
 
@@ -35,7 +41,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     let mut stmt = match result {
         Ok(stmt) => stmt,
         Err(_) if key.is_some() => return Err(ExtractError::SqlCipherKey),
-        Err(_e) => return Err(ExtractError::SqlCipherRequired)
+        Err(_) => return Err(ExtractError::SqlCipherRequired)
     };
 
     let table_names: Vec<String> = stmt
@@ -44,50 +50,53 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
 
     info!("Found {} tables in database", table_names.len());
 
-    for table_name in table_names {
-        debug!("Processing table: {}", table_name);
+    let mut writes: Vec<(PathBuf, Vec<u8>)> = Vec::with_capacity(table_names.len());
 
-        match extract_db_bytes(&conn, &table_name, &dir).await {
-            Ok(count) => {
-                info!(table = table_name, count, "Extracted table successfully");
+    for table_name in &table_names {
+        match query_table_bytes(&conn, table_name) {
+            Ok(Some(bytes)) => {
+                let file_path = dir.join(format!("{table_name}.bytes"));
+                writes.push((file_path, bytes));
+            }
+            Ok(None) => {
+                warn!(table = table_name, "Table is empty, skipping");
             }
             Err(e) => {
-                error!(table = table_name, error = %e, "Failed to extract table");
+                warn!(table = table_name, error = %e, "Failed to query table");
             }
         }
     }
 
-    info!(success = true, filename, "Extracted SQLite DB");
+    let tasks: Vec<_> = writes
+        .into_iter()
+        .map(|(path, bytes)| tokio::spawn(async move { fs::write(path, bytes).await }))
+        .collect();
+
+    let mut written = 0usize;
+    for task in tasks {
+        match task.await {
+            Ok(Ok(())) => written += 1,
+            Ok(Err(e)) => warn!(error = %e, "Failed to write file"),
+            Err(e) => warn!(error = %e, "Task panicked")
+        }
+    }
+
+    info!(success = true, filename, written, "Extracted SQLite DB");
     Ok(())
 }
 
-async fn extract_db_bytes(
+fn query_table_bytes(
     conn: &rusqlite::Connection,
-    table_name: &str,
-    output_dir: &Path
-) -> Result<usize, ExtractError> {
-    let query = format!("SELECT Bytes FROM '{table_name}'");
+    table_name: &str
+) -> Result<Option<Vec<u8>>, ExtractError> {
+    let query = format!("SELECT Bytes FROM '{table_name}' LIMIT 1");
     let mut stmt = conn.prepare(&query)?;
 
-    let mut count = 0;
-    let rows = stmt.query_map([], |row| {
-        let bytes: Vec<u8> = row.get(0)?;
-        Ok(bytes)
-    })?;
+    let mut rows = stmt.query_map([], |row| row.get::<_, Vec<u8>>(0))?;
 
-    for (index, row_result) in rows.enumerate() {
-        match row_result {
-            Ok(bytes) => {
-                let filename = format!("{table_name}_{index:04}.bytes");
-                let file_path = output_dir.join(filename);
-                tokio::fs::write(file_path, bytes).await?;
-                count += 1;
-            }
-            Err(e) => {
-                warn!(table = table_name, index, error = %e, "Failed to extract row");
-            }
-        }
+    match rows.next() {
+        Some(Ok(bytes)) => Ok(Some(bytes)),
+        Some(Err(e)) => Err(e.into()),
+        None => Ok(None)
     }
-
-    Ok(count)
 }

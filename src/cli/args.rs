@@ -55,9 +55,13 @@ pub struct TableArgs {
     #[command(flatten)]
     pub base: BaseExtractArgs,
 
-    /// SQLCipher key for encrypted databases
+    /// SQLCipher key for encrypted databases (hex string)
     #[arg(short, long, value_name = "KEY")]
-    pub key: Option<String>
+    pub key: Option<String>,
+
+    /// SQLCipher license
+    #[arg(short, long, value_name = "LICENSE")]
+    pub license: Option<String>
 }
 
 #[derive(Parser)]

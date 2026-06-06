@@ -27,7 +27,7 @@ baax extract pack --input some/input/directory/file.molru --output some/output/d
 
 # Extracting TableBundles
 baax extract table --input some/input/directory/file.zip --output some/output/directory
-baax extract table --input some/input/directory/file.db --output some/output/directory
+baax extract table --input some/input/directory/file.db --output some/output/directory --key "0000..."
 ```
 
 ## Building
@@ -56,6 +56,9 @@ Why it doesn't do repack?
 Why there's no FlatBuffers and MemoryPack extract?
 > Adding those requires `BA-AX` to release a new version each time the game updates.
 > I need a way to have the Flatbuffer updates separate from `BA-AX`.
+
+Why this doesn't provide a way to fetch SQLCipher keys?
+> Doing that requires to call to the official game server which this project is not aiming to do.
 
 ### Other Projects
 - [BA-AD](https://github.com/Deathemonic/BA-AD): A tool and library that downloads the latest **Blue Archive** assets.
