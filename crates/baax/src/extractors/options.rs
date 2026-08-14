@@ -8,17 +8,29 @@ pub enum ExtractionMode {
 pub struct ExtractOptions<'a> {
     pub mode: ExtractionMode,
     pub lowercase: bool,
+    pub flatbuffer: bool,
     pub key: Option<&'a str>,
     pub license: Option<&'a str>
 }
 
 impl<'a> ExtractOptions<'a> {
     pub const fn new(mode: ExtractionMode) -> Self {
-        Self { mode, lowercase: false, key: None, license: None }
+        Self {
+            mode,
+            lowercase: false,
+            flatbuffer: false,
+            key: None,
+            license: None
+        }
     }
 
     pub const fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
+        self
+    }
+
+    pub const fn with_flatbuffer(mut self, flatbuffer: bool) -> Self {
+        self.flatbuffer = flatbuffer;
         self
     }
 

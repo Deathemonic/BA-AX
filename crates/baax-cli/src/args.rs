@@ -36,8 +36,10 @@ pub enum Commands {
 pub enum ExtractType {
     /// Extract media resources
     Media(MediaArgs),
+
     /// Extract table data
     Table(TableArgs),
+
     /// Extract pack files
     Pack(PackArgs)
 }
@@ -64,13 +66,17 @@ pub struct TableArgs {
     #[command(flatten)]
     pub base: BaseExtractArgs,
 
-    /// SQLCipher key for encrypted databases (hex string)
+    /// SQLCipher key for encrypted ExcelDB (hex string)
     #[arg(short, long, value_name = "KEY")]
     pub key: Option<String>,
 
     /// SQLCipher license
     #[arg(short, long, value_name = "LICENSE")]
-    pub license: Option<String>
+    pub license: Option<String>,
+
+    /// Decode FlatBuffers
+    #[arg(short, long, value_name = "LIBRARY")]
+    pub flatbuffer: Option<PathBuf>
 }
 
 #[derive(Parser)]

@@ -2,6 +2,7 @@ use baad_utils::info;
 use baax::extractors::pack::{extract_all_packs, extract_pack};
 use baax::extractors::zip::{extract, extract_file};
 use baax::extractors::{ExtractOptions, ExtractionMode};
+use baax::loader;
 use clap::CommandFactory;
 use eyre::Result;
 use tokio::fs;
@@ -42,8 +43,7 @@ impl CommandHandler {
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
-        let options =
-            ExtractOptions::new(ExtractionMode::MediaResources).with_lowercase(true);
+        let options = ExtractOptions::new(ExtractionMode::MediaResources).with_lowercase(true);
 
         if metadata.is_file() {
             extract_file(args.base.input, &args.base.output, options).await?;
@@ -61,10 +61,16 @@ impl CommandHandler {
             fs::create_dir_all(&args.base.output).await?;
         }
 
+        if let Some(path) = args.flatbuffer.as_deref() {
+            loader::load(path)?;
+            info!(version = loader::version()?, "Loaded flatbuffer plugin");
+        }
+
         let metadata = fs::metadata(&args.base.input).await?;
         let options = ExtractOptions::new(ExtractionMode::Tables)
             .with_key(args.key.as_deref())
-            .with_license(args.license.as_deref());
+            .with_license(args.license.as_deref())
+            .with_flatbuffer(args.flatbuffer.is_some());
 
         if metadata.is_file() {
             extract_file(args.base.input, &args.base.output, options).await?;
