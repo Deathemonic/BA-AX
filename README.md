@@ -42,6 +42,10 @@ baax extract table --input some/input/directory/excel_file.zip --output some/out
 
 # Converting a raw flatbuffer bytes
 baax convert flatbuffer --input some/input/directory/file.bytes --output some/output/directory --flat gl-123.flat
+
+# Convert pack files back to regular zip files
+baax convert pack --input some/input/directory/file.molru --output some/output/directory
+
 ```
 
 ### Flat Files
