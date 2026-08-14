@@ -79,10 +79,9 @@ pub async fn extract_db(
         .map(|(path, bytes)| tokio::spawn(async move { fs::write(path, bytes).await }))
         .collect();
 
-    let mut written = 0usize;
     for task in tasks {
         match task.await {
-            Ok(Ok(())) => written += 1,
+            Ok(Ok(())) => {}
             Ok(Err(e)) => warn!(error = %e, "Failed to write file"),
             Err(e) => warn!(error = %e, "Task panicked")
         }
