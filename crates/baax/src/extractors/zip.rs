@@ -13,9 +13,9 @@ pub enum ExtractionMode {
     Tables
 }
 
-pub async fn extract_zip<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2,
+pub async fn extract_zip(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>,
     lowercase: bool
 ) -> Result<(), ExtractError> {
     let path = path.as_ref();
@@ -40,9 +40,9 @@ pub async fn extract_zip<P1: AsRef<Path>, P2: AsRef<Path>>(
     Ok(())
 }
 
-pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
-    input: P1,
-    output: P2,
+pub async fn extract(
+    input: impl AsRef<Path>,
+    output: impl AsRef<Path>,
     mode: ExtractionMode,
     lowercase: bool,
     key: Option<&str>,
@@ -62,9 +62,9 @@ pub async fn extract<P1: AsRef<Path>, P2: AsRef<Path>>(
     Ok(())
 }
 
-pub async fn extract_file<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2,
+pub async fn extract_file(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>,
     mode: ExtractionMode,
     lowercase: bool,
     key: Option<&str>,
@@ -88,9 +88,9 @@ fn supports_file(path: &Path, mode: ExtractionMode) -> bool {
     )
 }
 
-async fn extract_supported_file<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2,
+async fn extract_supported_file(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>,
     mode: ExtractionMode,
     lowercase: bool,
     key: Option<&str>,

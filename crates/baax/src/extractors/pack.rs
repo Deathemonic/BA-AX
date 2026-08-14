@@ -82,9 +82,9 @@ impl PackFile {
     pub fn is_empty(&self) -> bool { self.index.is_empty() }
 }
 
-pub async fn extract_pack<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2
+pub async fn extract_pack(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>
 ) -> Result<(), ExtractError> {
     let path = path.as_ref();
     let filename =
@@ -109,9 +109,9 @@ pub async fn extract_pack<P1: AsRef<Path>, P2: AsRef<Path>>(
     Ok(())
 }
 
-pub async fn extract_all_packs<P1: AsRef<Path>, P2: AsRef<Path>>(
-    input: P1,
-    output: P2
+pub async fn extract_all_packs(
+    input: impl AsRef<Path>,
+    output: impl AsRef<Path>
 ) -> Result<(), ExtractError> {
     for entry in input.as_ref().read_dir()? {
         let entry = entry?;

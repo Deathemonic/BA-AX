@@ -1,13 +1,15 @@
 use std::path::{Path, PathBuf};
 
 use baad_utils::{debug, info, warn};
+use fastcat::fconcat;
+use rusqlite::Connection;
 use tokio::fs;
 
 use crate::error::ExtractError;
 
-pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2,
+pub async fn extract_db(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>,
     key: Option<&str>,
     license: Option<&str>
 ) -> Result<(), ExtractError> {
@@ -26,12 +28,12 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     let conn = Connection::open(path)?;
 
     if let Some(license) = license {
-        conn.execute_batch(&format!("PRAGMA cipher_license = '{license}';\n"))
+        conn.execute_batch(&fconcat!("PRAGMA cipher_license = '", license, "';\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
     }
 
     if let Some(key) = key {
-        conn.execute_batch(&format!("PRAGMA key = \"x'{key}'\";\n"))
+        conn.execute_batch(&fconcat!("PRAGMA key = \"x'", key, "'\";\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
     }
 
@@ -55,7 +57,7 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     for table_name in &table_names {
         match query_table_bytes(&conn, table_name) {
             Ok(Some(bytes)) => {
-                let file_path = dir.join(format!("{table_name}.bytes"));
+                let file_path = dir.join(fconcat!(table_name, ".bytes"));
                 writes.push((file_path, bytes));
             }
             Ok(None) => {
@@ -85,11 +87,8 @@ pub async fn extract_db<P1: AsRef<Path>, P2: AsRef<Path>>(
     Ok(())
 }
 
-fn query_table_bytes(
-    conn: &rusqlite::Connection,
-    table_name: &str
-) -> Result<Option<Vec<u8>>, ExtractError> {
-    let query = format!("SELECT Bytes FROM '{table_name}' LIMIT 1");
+fn query_table_bytes(conn: &Connection, table_name: &str) -> Result<Option<Vec<u8>>, ExtractError> {
+    let query = fconcat!("SELECT Bytes FROM '", table_name, "' LIMIT 1");
     let mut stmt = conn.prepare(&query)?;
 
     let mut rows = stmt.query_map([], |row| row.get::<_, Vec<u8>>(0))?;
