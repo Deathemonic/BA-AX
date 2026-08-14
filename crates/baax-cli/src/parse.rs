@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use baad_utils::info;
 use baax::extractors::zip::{extract, extract_file};
 use baax::extractors::{ExtractOptions, ExtractionMode};
@@ -6,7 +8,7 @@ use clap::CommandFactory;
 use eyre::Result;
 use tokio::fs;
 
-use crate::args::{Args, Commands, ExtractType, MediaArgs, PackArgs, TableArgs};
+use crate::args::{Args, Commands, ExtractType, MediaArgs, TableArgs};
 
 pub struct CommandHandler {
     args: Args
@@ -29,27 +31,21 @@ impl CommandHandler {
     async fn handle_extract(extract_type: ExtractType) -> Result<()> {
         match extract_type {
             ExtractType::Media(media_args) => Self::execute_media_extraction(media_args).await,
-            ExtractType::Table(table_args) => Self::execute_table_extraction(table_args).await,
-            ExtractType::Pack(pack_args) => Self::execute_pack_extraction(pack_args).await
+            ExtractType::Table(table_args) => Self::execute_table_extraction(table_args).await
         }
     }
 
     async fn execute_media_extraction(args: MediaArgs) -> Result<()> {
-        let mode = ExtractionMode::MediaResources;
-        info!("Extracting {}...", mode);
-
         if !args.base.output.exists() {
             fs::create_dir_all(&args.base.output).await?;
         }
 
-        let metadata = fs::metadata(&args.base.input).await?;
-        let options = ExtractOptions::new(mode).with_lowercase(true);
+        let options = ExtractOptions::new(ExtractionMode::MediaResources)
+            .with_lowercase(true)
+            .with_format(args.format.into());
 
-        if metadata.is_file() {
-            extract_file(args.base.input, &args.base.output, options).await?;
-        } else if metadata.is_dir() {
-            extract(args.base.input, args.base.output, options).await?;
-        }
+        info!("Extracting {}...", options.mode);
+        Self::execute_extraction(&args.base.input, &args.base.output, options).await?;
 
         Ok(())
     }
@@ -67,36 +63,27 @@ impl CommandHandler {
             info!(version = loader::version()?, "Loaded flatbuffer plugin");
         }
 
-        let metadata = fs::metadata(&args.base.input).await?;
         let options = ExtractOptions::new(mode)
             .with_key(args.key.as_deref())
             .with_license(args.license.as_deref())
             .with_flatbuffer(args.flatbuffer.is_some());
 
-        if metadata.is_file() {
-            extract_file(args.base.input, &args.base.output, options).await?;
-        } else if metadata.is_dir() {
-            extract(args.base.input, args.base.output, options).await?;
-        }
+        Self::execute_extraction(&args.base.input, &args.base.output, options).await?;
 
         Ok(())
     }
 
-    async fn execute_pack_extraction(args: PackArgs) -> Result<()> {
-        let mode = ExtractionMode::Packs;
-        info!("Extracting {}...", mode);
-
-        if !args.base.output.exists() {
-            fs::create_dir_all(&args.base.output).await?;
-        }
-
-        let metadata = fs::metadata(&args.base.input).await?;
-        let options = ExtractOptions::new(mode);
+    async fn execute_extraction(
+        input: impl AsRef<Path>,
+        output: impl AsRef<Path>,
+        options: ExtractOptions<'_>
+    ) -> Result<()> {
+        let metadata = fs::metadata(&input).await?;
 
         if metadata.is_file() {
-            extract_file(args.base.input, &args.base.output, options).await?;
+            extract_file(input, output, options).await?;
         } else if metadata.is_dir() {
-            extract(args.base.input, args.base.output, options).await?;
+            extract(input, output, options).await?;
         }
 
         Ok(())

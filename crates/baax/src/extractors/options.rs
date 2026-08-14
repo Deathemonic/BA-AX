@@ -1,5 +1,14 @@
 use strum::{Display, EnumString};
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Display, EnumString)]
+#[strum(serialize_all = "lowercase")]
+pub enum ArchiveFormat {
+    #[default]
+    Auto,
+    Zip,
+    Pack
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Display, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum ExtractionMode {
@@ -11,6 +20,7 @@ pub enum ExtractionMode {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ExtractOptions<'a> {
     pub mode: ExtractionMode,
+    pub format: ArchiveFormat,
     pub lowercase: bool,
     pub flatbuffer: bool,
     pub key: Option<&'a str>,
@@ -21,6 +31,7 @@ impl<'a> ExtractOptions<'a> {
     pub const fn new(mode: ExtractionMode) -> Self {
         Self {
             mode,
+            format: ArchiveFormat::Auto,
             lowercase: false,
             flatbuffer: false,
             key: None,
@@ -30,6 +41,11 @@ impl<'a> ExtractOptions<'a> {
 
     pub const fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
+        self
+    }
+
+    pub const fn with_format(mut self, format: ArchiveFormat) -> Self {
+        self.format = format;
         self
     }
 

@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use baax::extractors::ArchiveFormat;
 use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
@@ -38,10 +39,30 @@ pub enum ExtractType {
     Media(MediaArgs),
 
     /// Extract table data
-    Table(TableArgs),
+    Table(TableArgs)
+}
 
-    /// Extract pack files
-    Pack(PackArgs)
+#[derive(Debug, Default, Clone, Copy, ValueEnum)]
+pub enum Format {
+    /// Detect the archive format from the file extension
+    #[default]
+    Auto,
+
+    /// Force zip extraction
+    Zip,
+
+    /// Force molru extraction
+    Pack
+}
+
+impl From<Format> for ArchiveFormat {
+    fn from(format: Format) -> Self {
+        match format {
+            Format::Auto => Self::Auto,
+            Format::Zip => Self::Zip,
+            Format::Pack => Self::Pack
+        }
+    }
 }
 
 #[derive(Parser)]
@@ -58,7 +79,11 @@ pub struct BaseExtractArgs {
 #[derive(Parser)]
 pub struct MediaArgs {
     #[command(flatten)]
-    pub base: BaseExtractArgs
+    pub base: BaseExtractArgs,
+
+    /// Archive format to extract
+    #[arg(short, long, value_name = "FORMAT", default_value = "auto")]
+    pub format: Format
 }
 
 #[derive(Parser)]
@@ -77,10 +102,4 @@ pub struct TableArgs {
     /// Decode FlatBuffers
     #[arg(short, long, value_name = "LIBRARY")]
     pub flatbuffer: Option<PathBuf>
-}
-
-#[derive(Parser)]
-pub struct PackArgs {
-    #[command(flatten)]
-    pub base: BaseExtractArgs
 }

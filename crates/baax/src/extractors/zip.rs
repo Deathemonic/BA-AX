@@ -8,7 +8,7 @@ use tokio::fs;
 use crate::error::ExtractError;
 use crate::extractors::db::extract_db;
 use crate::extractors::dump::dump_bytes;
-use crate::extractors::options::{ExtractOptions, ExtractionMode};
+use crate::extractors::options::{ArchiveFormat, ExtractOptions, ExtractionMode};
 use crate::extractors::pack::PackFile;
 use crate::extractors::table::TableZipFile;
 
@@ -25,13 +25,24 @@ impl FileKind {
         path.extension().and_then(|ext| ext.to_str()).and_then(|ext| Self::from_str(ext).ok())
     }
 
-    fn is_supported(self, mode: ExtractionMode) -> bool {
-        matches!(
-            (self, mode),
-            (FileKind::Zip, ExtractionMode::MediaResources | ExtractionMode::Tables)
-                | (FileKind::Db, ExtractionMode::Tables)
-                | (FileKind::Molru, ExtractionMode::Packs)
-        )
+    const fn format(self) -> ArchiveFormat {
+        match self {
+            FileKind::Zip | FileKind::Db => ArchiveFormat::Zip,
+            FileKind::Molru => ArchiveFormat::Pack
+        }
+    }
+
+    fn is_supported(self, options: ExtractOptions<'_>) -> bool {
+        let format_matches =
+            options.format == ArchiveFormat::Auto || options.format == self.format();
+
+        format_matches
+            && matches!(
+                (self, options.mode),
+                (FileKind::Zip, ExtractionMode::MediaResources | ExtractionMode::Tables)
+                    | (FileKind::Db, ExtractionMode::Tables)
+                    | (FileKind::Molru, ExtractionMode::MediaResources | ExtractionMode::Packs)
+            )
     }
 }
 
@@ -105,8 +116,8 @@ pub async fn extract(
         let entry = entry?;
         let path = entry.path();
 
-        let supported = path.is_file()
-            && FileKind::from_path(&path).is_some_and(|k| k.is_supported(options.mode));
+        let supported =
+            path.is_file() && FileKind::from_path(&path).is_some_and(|k| k.is_supported(options));
 
         if supported {
             extract_file(path, &output, options).await?;
@@ -123,12 +134,13 @@ pub async fn extract_file(
 ) -> Result<(), ExtractError> {
     let kind = FileKind::from_path(path.as_ref()).ok_or(ExtractError::UnsupportedFileType)?;
 
+    if !kind.is_supported(options) {
+        return Err(ExtractError::UnsupportedFileType);
+    }
+
     match kind {
         FileKind::Zip => extract_zip(path, output, options.lowercase, options.flatbuffer).await,
-        FileKind::Db if options.mode == ExtractionMode::Tables => {
-            extract_db(path, output, options).await
-        }
-        FileKind::Db => Err(ExtractError::UnsupportedFileType),
+        FileKind::Db => extract_db(path, output, options).await,
         FileKind::Molru => extract_pack(path, output).await
     }
 }
