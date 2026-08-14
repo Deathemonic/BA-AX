@@ -1,5 +1,4 @@
 use baad_utils::info;
-use baax::extractors::pack::{extract_all_packs, extract_pack};
 use baax::extractors::zip::{extract, extract_file};
 use baax::extractors::{ExtractOptions, ExtractionMode};
 use baax::loader;
@@ -36,14 +35,15 @@ impl CommandHandler {
     }
 
     async fn execute_media_extraction(args: MediaArgs) -> Result<()> {
-        info!("Extracting MediaResources...");
+        let mode = ExtractionMode::MediaResources;
+        info!("Extracting {}...", mode);
 
         if !args.base.output.exists() {
             fs::create_dir_all(&args.base.output).await?;
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
-        let options = ExtractOptions::new(ExtractionMode::MediaResources).with_lowercase(true);
+        let options = ExtractOptions::new(mode).with_lowercase(true);
 
         if metadata.is_file() {
             extract_file(args.base.input, &args.base.output, options).await?;
@@ -55,7 +55,8 @@ impl CommandHandler {
     }
 
     async fn execute_table_extraction(args: TableArgs) -> Result<()> {
-        info!("Extracting Tables...");
+        let mode = ExtractionMode::Tables;
+        info!("Extracting {}...", mode);
 
         if !args.base.output.exists() {
             fs::create_dir_all(&args.base.output).await?;
@@ -67,7 +68,7 @@ impl CommandHandler {
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
-        let options = ExtractOptions::new(ExtractionMode::Tables)
+        let options = ExtractOptions::new(mode)
             .with_key(args.key.as_deref())
             .with_license(args.license.as_deref())
             .with_flatbuffer(args.flatbuffer.is_some());
@@ -82,18 +83,20 @@ impl CommandHandler {
     }
 
     async fn execute_pack_extraction(args: PackArgs) -> Result<()> {
-        info!("Extracting Packs...");
+        let mode = ExtractionMode::Packs;
+        info!("Extracting {}...", mode);
 
         if !args.base.output.exists() {
             fs::create_dir_all(&args.base.output).await?;
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
+        let options = ExtractOptions::new(mode);
 
         if metadata.is_file() {
-            extract_pack(args.base.input, args.base.output).await?;
+            extract_file(args.base.input, &args.base.output, options).await?;
         } else if metadata.is_dir() {
-            extract_all_packs(args.base.input, args.base.output).await?;
+            extract(args.base.input, args.base.output, options).await?;
         }
 
         Ok(())

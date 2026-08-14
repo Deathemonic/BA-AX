@@ -18,6 +18,7 @@ memmap2 = "0.9"
 rand_mt = "6.0"
 rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
 serde_json = "1.0"
+strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
 zip = "8.6"
 zstd = "0.13"

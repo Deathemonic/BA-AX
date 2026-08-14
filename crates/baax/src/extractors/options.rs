@@ -1,7 +1,11 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use strum::{Display, EnumString};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Display, EnumString)]
+#[strum(serialize_all = "lowercase")]
 pub enum ExtractionMode {
     MediaResources,
-    Tables
+    Tables,
+    Packs
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

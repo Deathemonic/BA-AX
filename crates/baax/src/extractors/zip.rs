@@ -1,13 +1,39 @@
 use std::path::Path;
+use std::str::FromStr;
 
 use baad_utils::{debug, info};
+use strum::EnumString;
 use tokio::fs;
 
 use crate::error::ExtractError;
 use crate::extractors::db::extract_db;
 use crate::extractors::dump::dump_bytes;
 use crate::extractors::options::{ExtractOptions, ExtractionMode};
+use crate::extractors::pack::PackFile;
 use crate::extractors::table::TableZipFile;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString)]
+#[strum(serialize_all = "lowercase")]
+enum FileKind {
+    Zip,
+    Db,
+    Molru
+}
+
+impl FileKind {
+    fn from_path(path: &Path) -> Option<Self> {
+        path.extension().and_then(|ext| ext.to_str()).and_then(|ext| Self::from_str(ext).ok())
+    }
+
+    fn is_supported(self, mode: ExtractionMode) -> bool {
+        matches!(
+            (self, mode),
+            (FileKind::Zip, ExtractionMode::MediaResources | ExtractionMode::Tables)
+                | (FileKind::Db, ExtractionMode::Tables)
+                | (FileKind::Molru, ExtractionMode::Packs)
+        )
+    }
+}
 
 pub async fn extract_zip(
     path: impl AsRef<Path>,
@@ -41,19 +67,49 @@ pub async fn extract_zip(
     Ok(())
 }
 
+pub async fn extract_pack(
+    path: impl AsRef<Path>,
+    output: impl AsRef<Path>
+) -> Result<(), ExtractError> {
+    let path = path.as_ref();
+    let filename =
+        path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
+
+    let pack = PackFile::open(path)?;
+    let dir = output.as_ref().join(filename.trim_end_matches(".molru"));
+
+    debug!(from = filename, to = %dir.display(), "Extracting");
+
+    fs::create_dir_all(&dir).await?;
+
+    for (name, data) in pack.entries() {
+        let out = dir.join(name);
+        if let Some(parent) = out.parent() {
+            fs::create_dir_all(parent).await?;
+        }
+        fs::write(out, data).await?;
+    }
+
+    info!(success = true, filename, "Extracted");
+    Ok(())
+}
+
 pub async fn extract(
     input: impl AsRef<Path>,
     output: impl AsRef<Path>,
     options: ExtractOptions<'_>
 ) -> Result<(), ExtractError> {
-    info!("Extracting {:?}...", options.mode);
+    info!("Extracting {}...", options.mode);
 
     for entry in input.as_ref().read_dir()? {
         let entry = entry?;
         let path = entry.path();
 
-        if path.is_file() && supports_file(&path, options.mode) {
-            extract_supported_file(path, &output, options).await?;
+        let supported = path.is_file()
+            && FileKind::from_path(&path).is_some_and(|k| k.is_supported(options.mode));
+
+        if supported {
+            extract_file(path, &output, options).await?;
         }
     }
 
@@ -65,31 +121,14 @@ pub async fn extract_file(
     output: impl AsRef<Path>,
     options: ExtractOptions<'_>
 ) -> Result<(), ExtractError> {
-    if !supports_file(path.as_ref(), options.mode) {
-        return Err(ExtractError::UnsupportedFileType);
-    }
+    let kind = FileKind::from_path(path.as_ref()).ok_or(ExtractError::UnsupportedFileType)?;
 
-    extract_supported_file(path, output, options).await?;
-    Ok(())
-}
-
-fn supports_file(path: &Path, mode: ExtractionMode) -> bool {
-    matches!(
-        (path.extension().and_then(|ext| ext.to_str()), mode),
-        (Some("zip"), _) | (Some("db"), ExtractionMode::Tables)
-    )
-}
-
-async fn extract_supported_file(
-    path: impl AsRef<Path>,
-    output: impl AsRef<Path>,
-    options: ExtractOptions<'_>
-) -> Result<(), ExtractError> {
-    match path.as_ref().extension().and_then(|ext| ext.to_str()) {
-        Some("zip") => extract_zip(path, output, options.lowercase, options.flatbuffer).await,
-        Some("db") if options.mode == ExtractionMode::Tables => {
+    match kind {
+        FileKind::Zip => extract_zip(path, output, options.lowercase, options.flatbuffer).await,
+        FileKind::Db if options.mode == ExtractionMode::Tables => {
             extract_db(path, output, options).await
         }
-        _ => unreachable!("extract_supported_file called with unsupported file")
+        FileKind::Db => Err(ExtractError::UnsupportedFileType),
+        FileKind::Molru => extract_pack(path, output).await
     }
 }
