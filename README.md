@@ -22,13 +22,37 @@ cargo install --git "https://github.com/Deathemonic/BA-AX" --locked baax-cli
 ```shell
 # Extracting MediaResources
 baax extract media --input some/input/directory/file.zip --output some/output/directory
+
 # Extracting Global PC MediaResources
-baax extract pack --input some/input/directory/file.molru --output some/output/directory
+baax extract media --input some/input/directory/file.molru --output some/output/directory
 
 # Extracting TableBundles
 baax extract table --input some/input/directory/file.zip --output some/output/directory
+
+# Extracting DB using a SQLCipher key (Hex)
 baax extract table --input some/input/directory/file.db --output some/output/directory --key "0000..."
+
+
+# Extracting MediaResources explicit format (available: auto (default) | zip | pack)
+baax extract media --input some/input/directory/file_molru --output some/output/directory --format pack
+
+# Extracting Excel with FlatBuffer decoding
+baax extract table --input some/input/directory/excel_file.zip --output some/output/directory --flatbuffer gl-123.flat
 ```
+
+### Flat Files
+
+You can find `.flat` files here: https://github.com/Deathemonic/BA-TG/releases.
+You need to match the `.flat` files and version of excel you are decoding if not it will result on a inaccurate or fail dump.
+
+To know which one is the correct flat you can use this schema:
+
+```
+japan-1.71.449178.flat
+  ^         ^
+Region  Game Version
+```
+
 
 ## Building
 
