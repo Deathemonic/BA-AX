@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 
-use baad_core::{debug, info};
+use baad_utils::{debug, info};
 use bacy::crypto::aes;
 use bacy::hash::sha;
 use memmap2::Mmap;

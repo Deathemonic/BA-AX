@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use baad_core::{debug, info, warn};
+use baad_utils::{debug, info, warn};
 use tokio::fs;
 
 use crate::error::ExtractError;

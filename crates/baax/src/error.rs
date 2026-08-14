@@ -42,5 +42,8 @@ pub enum ExtractError {
     SqlCipherRequired,
 
     #[error("Could not decrypt database")]
-    SqlCipherKey
+    SqlCipherKey,
+
+    #[error("Unsupported file type: {0}")]
+    UnsupportedFileType(String)
 }

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(name = "baax")]
@@ -10,9 +10,18 @@ pub struct Args {
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    /// Enable verbose logging
-    #[arg(short, long)]
-    pub verbose: bool
+    /// Enable verbose output
+    #[arg(short, long, value_name = "LEVEL", num_args = 0..=1, default_missing_value = "minimal", require_equals = true)]
+    pub verbose: Option<VerboseLevel>
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum VerboseLevel {
+    /// Enable debug logs
+    Minimal,
+
+    /// Enable trace logs
+    Full
 }
 
 #[derive(Subcommand)]

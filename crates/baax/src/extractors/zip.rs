@@ -1,7 +1,6 @@
 use std::path::Path;
 
-use baad_core::{debug, info};
-use eyre::{Result, eyre};
+use baad_utils::{debug, info};
 use tokio::fs;
 
 use crate::error::ExtractError;
@@ -70,12 +69,12 @@ pub async fn extract_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     lowercase: bool,
     key: Option<&str>,
     license: Option<&str>
-) -> Result<()> {
+) -> Result<(), ExtractError> {
     let path_ref = path.as_ref();
 
     if !supports_file(path_ref, mode) {
         let extension = path_ref.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-        return Err(eyre!("Unsupported file type: {}", extension));
+        return Err(ExtractError::UnsupportedFileType(extension.to_string()));
     }
 
     extract_supported_file(path, output, mode, lowercase, key, license).await?;

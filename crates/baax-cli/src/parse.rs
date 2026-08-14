@@ -1,4 +1,4 @@
-use baad_core::info;
+use baad_utils::info;
 use baax::extractors::ExtractionMode;
 use baax::extractors::pack::{extract_all_packs, extract_pack};
 use baax::extractors::zip::{extract, extract_file};
@@ -6,7 +6,7 @@ use clap::CommandFactory;
 use eyre::Result;
 use tokio::fs;
 
-use crate::cli::args::{Args, Commands, ExtractType, MediaArgs, PackArgs, TableArgs};
+use crate::args::{Args, Commands, ExtractType, MediaArgs, PackArgs, TableArgs};
 
 pub struct CommandHandler {
     args: Args

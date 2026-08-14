@@ -1,28 +1,17 @@
-[package]
-name = "baax"
-version = "1.0.0"
+[workspace]
+resolver = "3"
+members = ["crates/baax", "crates/baax-cli"]
+
+[workspace.package]
+version = "3.0.0"
 edition = "2024"
+authors = ["Zinth"]
 
-[lib]
-name = "baax"
-path = "src/lib.rs"
+[workspace.dependencies]
+baax = { path = "crates/baax" }
 
-[[bin]]
-name = "baax"
-path = "src/main.rs"
+tokio = { version = "1.53", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
 
-[dependencies]
-eyre = "0.6.12"
-clap = { version = "4.6", features = ["derive"] }
-thiserror = "2.0"
-tokio = { version = "1.52", features = ["full"] }
-rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
-memmap2 = "0.9.10"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-rand_mt = "6.0.3"
-zip = "8.6.0"
-base64 = "0.22.1"
-
-bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "3.2.0" }
-baad-core = { git = "https://github.com/RZinth/BA-AD-Core", version = "2.7.1" }
+baad-utils = { git = "https://github.com/Deathemonic/BA-AD", version = "3.0.0" }
+bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "3.3.2" }

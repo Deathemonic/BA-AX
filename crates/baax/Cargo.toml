@@ -1,0 +1,23 @@
+[package]
+name = "baax"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+baad-utils = { workspace = true }
+bacy = { workspace = true }
+
+serde = { workspace = true }
+tokio = { workspace = true }
+
+base64 = "0.23"
+crc32fast = "1.5"
+fastcat = "1.1"
+libloading = "0.9"
+memmap2 = "0.9"
+rand_mt = "6.0"
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
+serde_json = "1.0"
+thiserror = "2.0"
+zip = "8.6"
+zstd = "0.13"
