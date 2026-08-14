@@ -64,7 +64,7 @@ pub enum FfiError {
     NotLoaded,
 
     #[error("Flatbuffer plugin error: {0}")]
-    Plugin(String),
+    Plugin(Box<str>),
 
     #[error(transparent)]
     Flat(#[from] FlatError)
@@ -105,6 +105,6 @@ pub enum ExtractError {
     #[error("Could not decrypt database")]
     SqlCipherKey,
 
-    #[error("Unsupported file type: {0}")]
-    UnsupportedFileType(String)
+    #[error("Unsupported file type")]
+    UnsupportedFileType
 }

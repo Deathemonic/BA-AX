@@ -65,11 +65,8 @@ pub async fn extract_file(
     output: impl AsRef<Path>,
     options: ExtractOptions<'_>
 ) -> Result<(), ExtractError> {
-    let path_ref = path.as_ref();
-
-    if !supports_file(path_ref, options.mode) {
-        let extension = path_ref.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-        return Err(ExtractError::UnsupportedFileType(extension.to_string()));
+    if !supports_file(path.as_ref(), options.mode) {
+        return Err(ExtractError::UnsupportedFileType);
     }
 
     extract_supported_file(path, output, options).await?;

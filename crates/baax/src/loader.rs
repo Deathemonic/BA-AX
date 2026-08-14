@@ -113,7 +113,7 @@ impl Api {
             return self.take(result.json, "JSON");
         }
 
-        Err(FfiError::Plugin(self.take(result.error, "error")?))
+        Err(FfiError::Plugin(self.take(result.error, "error")?.into_boxed_str()))
     }
 
     fn take(&self, value: *mut c_char, label: &'static str) -> Result<String, FfiError> {
