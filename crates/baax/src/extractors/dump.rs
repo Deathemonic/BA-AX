@@ -54,7 +54,7 @@ pub async fn dump_db_table(
 
     write(dir, &row_type, json).await?;
 
-    info!(success = true, row_type, rows = blobs.len(), "Dumped");
+    info!(success = true, row_type, "Dumped");
     Ok(true)
 }
 
