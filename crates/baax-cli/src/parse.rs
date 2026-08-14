@@ -1,7 +1,7 @@
 use baad_utils::info;
-use baax::extractors::ExtractionMode;
 use baax::extractors::pack::{extract_all_packs, extract_pack};
 use baax::extractors::zip::{extract, extract_file};
+use baax::extractors::{ExtractOptions, ExtractionMode};
 use clap::CommandFactory;
 use eyre::Result;
 use tokio::fs;
@@ -42,27 +42,13 @@ impl CommandHandler {
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
+        let options =
+            ExtractOptions::new(ExtractionMode::MediaResources).with_lowercase(true);
 
         if metadata.is_file() {
-            extract_file(
-                args.base.input,
-                &args.base.output,
-                ExtractionMode::MediaResources,
-                true,
-                None,
-                None
-            )
-            .await?;
+            extract_file(args.base.input, &args.base.output, options).await?;
         } else if metadata.is_dir() {
-            extract(
-                args.base.input,
-                args.base.output,
-                ExtractionMode::MediaResources,
-                true,
-                None,
-                None
-            )
-            .await?;
+            extract(args.base.input, args.base.output, options).await?;
         }
 
         Ok(())
@@ -76,27 +62,14 @@ impl CommandHandler {
         }
 
         let metadata = fs::metadata(&args.base.input).await?;
+        let options = ExtractOptions::new(ExtractionMode::Tables)
+            .with_key(args.key.as_deref())
+            .with_license(args.license.as_deref());
 
         if metadata.is_file() {
-            extract_file(
-                args.base.input,
-                &args.base.output,
-                ExtractionMode::Tables,
-                false,
-                args.key.as_deref(),
-                args.license.as_deref()
-            )
-            .await?;
+            extract_file(args.base.input, &args.base.output, options).await?;
         } else if metadata.is_dir() {
-            extract(
-                args.base.input,
-                args.base.output,
-                ExtractionMode::Tables,
-                false,
-                args.key.as_deref(),
-                args.license.as_deref()
-            )
-            .await?;
+            extract(args.base.input, args.base.output, options).await?;
         }
 
         Ok(())

@@ -41,7 +41,7 @@ impl TableZipFile {
             let mut file = self.archive.by_index_decrypt(i, &self.password)?;
             let mut buf = Vec::with_capacity(file.size() as usize);
             file.read_to_end(&mut buf)?;
-            files.push((file.name().to_string(), buf));
+            files.push((file.name().into(), buf));
         }
         Ok(files)
     }
