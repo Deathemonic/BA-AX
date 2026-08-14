@@ -2,6 +2,7 @@ use std::path::Path;
 
 use baad_utils::info;
 use baax::converters::flatbuffer::convert_flatbuffer;
+use baax::converters::pack::convert_pack;
 use baax::extractors::zip::{extract, extract_file};
 use baax::extractors::{ExtractOptions, ExtractionMode};
 use baax::loader;
@@ -9,7 +10,16 @@ use clap::CommandFactory;
 use eyre::Result;
 use tokio::fs;
 
-use crate::args::{Args, Commands, ConvertType, ExtractType, FlatbufferArgs, MediaArgs, TableArgs};
+use crate::args::{
+    Args,
+    BaseExtractArgs,
+    Commands,
+    ConvertType,
+    ExtractType,
+    FlatbufferArgs,
+    MediaArgs,
+    TableArgs
+};
 
 pub struct CommandHandler {
     args: Args
@@ -39,7 +49,8 @@ impl CommandHandler {
 
     async fn handle_convert(convert_type: ConvertType) -> Result<()> {
         match convert_type {
-            ConvertType::Flatbuffer(flatbuffer_args) => Self::execute_flatbuffer_conversion(flatbuffer_args).await
+            ConvertType::Flatbuffer(flatbuffer_args) => Self::execute_flatbuffer_conversion(flatbuffer_args).await,
+            ConvertType::Pack(pack_args) => Self::execute_pack_conversion(pack_args).await
         }
     }
 
@@ -85,6 +96,12 @@ impl CommandHandler {
         loader::load(&args.flat)?;
         info!(version = loader::version()?, "Loaded flatbuffer plugin");
         convert_flatbuffer(&args.base.input, &args.base.output).await?;
+
+        Ok(())
+    }
+
+    async fn execute_pack_conversion(args: BaseExtractArgs) -> Result<()> {
+        convert_pack(&args.input, &args.output).await?;
 
         Ok(())
     }

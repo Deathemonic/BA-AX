@@ -84,6 +84,9 @@ pub enum ExtractError {
     #[error(transparent)]
     TableZip(#[from] TableZipError),
 
+    #[error(transparent)]
+    Zip(#[from] zip::result::ZipError),
+
     #[error("Failed to get file extension")]
     FileExtension,
 

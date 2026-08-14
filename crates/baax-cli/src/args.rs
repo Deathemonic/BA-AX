@@ -41,7 +41,10 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ConvertType {
     /// Convert FlatBuffer bytes to JSON
-    Flatbuffer(FlatbufferArgs)
+    Flatbuffer(FlatbufferArgs),
+
+    /// Convert molru pack to zip
+    Pack(BaseExtractArgs)
 }
 
 #[derive(Subcommand)]
