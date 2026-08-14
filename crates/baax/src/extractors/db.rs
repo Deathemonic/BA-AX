@@ -88,7 +88,7 @@ pub async fn extract_db(
         }
     }
 
-    info!(success = true, filename, written, "Extracted SQLite DB");
+    info!(success = true, filename, "Extracted SQLite DB");
     Ok(())
 }
 
