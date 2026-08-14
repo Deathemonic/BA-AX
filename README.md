@@ -14,7 +14,7 @@ You can download the latest pre-build binaries at [Releases](https://github.com/
 
 ### Cargo
 ```shell
-cargo install --git "https://github.com/Deathemonic/BA-AX" --locked --release
+cargo install --git "https://github.com/Deathemonic/BA-AX" --locked baax-cli
 ```
 
 ## Usage
@@ -45,17 +45,13 @@ cargo build
 
 ## Library
 ```toml
-baad = { git = "https://github.com/Deathemonic/BA-AX" }
+baax = { git = "https://github.com/Deathemonic/BA-AX" }
 ```
 
 ### FAQ
 
 Why it doesn't do repack?
 > Sole purpose of `BA-AX` just just for extracting.
-
-Why there's no FlatBuffers and MemoryPack extract?
-> Adding those requires `BA-AX` to release a new version each time the game updates.
-> I need a way to have the Flatbuffer updates separate from `BA-AX`.
 
 Why this doesn't provide a way to fetch SQLCipher keys?
 > Doing that requires to call to the official game server which this project is not aiming to do.
