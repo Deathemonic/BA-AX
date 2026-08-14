@@ -1,4 +1,5 @@
 pub mod db;
+pub mod dump;
 pub mod options;
 pub mod pack;
 pub mod table;

@@ -5,13 +5,15 @@ use tokio::fs;
 
 use crate::error::ExtractError;
 use crate::extractors::db::extract_db;
+use crate::extractors::dump::dump_bytes;
 use crate::extractors::options::{ExtractOptions, ExtractionMode};
 use crate::extractors::table::TableZipFile;
 
 pub async fn extract_zip(
     path: impl AsRef<Path>,
     output: impl AsRef<Path>,
-    lowercase: bool
+    lowercase: bool,
+    flatbuffer: bool
 ) -> Result<(), ExtractError> {
     let path = path.as_ref();
     let buf = fs::read(path).await?;
@@ -27,7 +29,11 @@ pub async fn extract_zip(
 
     fs::create_dir_all(&dir).await?;
 
-    for (name, buf) in zip.extract_all()? {
+    for (name, mut buf) in zip.extract_all()? {
+        if flatbuffer && dump_bytes(&dir, &name, &mut buf).await? {
+            continue;
+        }
+
         fs::write(dir.join(name), buf).await?;
     }
 
@@ -83,9 +89,9 @@ async fn extract_supported_file(
     options: ExtractOptions<'_>
 ) -> Result<(), ExtractError> {
     match path.as_ref().extension().and_then(|ext| ext.to_str()) {
-        Some("zip") => extract_zip(path, output, options.lowercase).await,
+        Some("zip") => extract_zip(path, output, options.lowercase, options.flatbuffer).await,
         Some("db") if options.mode == ExtractionMode::Tables => {
-            extract_db(path, output, options.key, options.license).await
+            extract_db(path, output, options).await
         }
         _ => unreachable!("extract_supported_file called with unsupported file")
     }

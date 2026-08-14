@@ -6,15 +6,14 @@ use rusqlite::Connection;
 use tokio::fs;
 
 use crate::error::ExtractError;
+use crate::extractors::dump::dump_db_table;
+use crate::extractors::options::ExtractOptions;
 
 pub async fn extract_db(
     path: impl AsRef<Path>,
     output: impl AsRef<Path>,
-    key: Option<&str>,
-    license: Option<&str>
+    options: ExtractOptions<'_>
 ) -> Result<(), ExtractError> {
-    use rusqlite::Connection;
-
     let path = path.as_ref();
     let filename =
         path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
@@ -27,12 +26,12 @@ pub async fn extract_db(
 
     let conn = Connection::open(path)?;
 
-    if let Some(license) = license {
+    if let Some(license) = options.license {
         conn.execute_batch(&fconcat!("PRAGMA cipher_license = '", license, "';\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
     }
 
-    if let Some(key) = key {
+    if let Some(key) = options.key {
         conn.execute_batch(&fconcat!("PRAGMA key = \"x'", key, "'\";\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
     }
@@ -42,7 +41,7 @@ pub async fn extract_db(
 
     let mut stmt = match result {
         Ok(stmt) => stmt,
-        Err(_) if key.is_some() => return Err(ExtractError::SqlCipherKey),
+        Err(_) if options.key.is_some() => return Err(ExtractError::SqlCipherKey),
         Err(_) => return Err(ExtractError::SqlCipherRequired)
     };
 
@@ -50,23 +49,29 @@ pub async fn extract_db(
         .query_map([], |row| row.get::<_, String>(0))?
         .collect::<Result<Vec<_>, rusqlite::Error>>()?;
 
-    info!("Found {} tables in database", table_names.len());
+    info!(table = table_names.len(), "Found tables in database");
 
     let mut writes: Vec<(PathBuf, Vec<u8>)> = Vec::with_capacity(table_names.len());
 
     for table_name in &table_names {
-        match query_table_bytes(&conn, table_name) {
-            Ok(Some(bytes)) => {
-                let file_path = dir.join(fconcat!(table_name, ".bytes"));
-                writes.push((file_path, bytes));
-            }
-            Ok(None) => {
+        let blobs = match query_table_bytes(&conn, table_name) {
+            Ok(blobs) if blobs.is_empty() => {
                 warn!(table = table_name, "Table is empty, skipping");
+                continue;
             }
+            Ok(blobs) => blobs,
             Err(e) => {
                 warn!(table = table_name, error = %e, "Failed to query table");
+                continue;
             }
+        };
+
+        if options.flatbuffer && dump_db_table(&dir, table_name, &blobs).await? {
+            continue;
         }
+
+        let combined = blobs.concat();
+        writes.push((dir.join(fconcat!(table_name, ".bytes")), combined));
     }
 
     let tasks: Vec<_> = writes
@@ -87,15 +92,19 @@ pub async fn extract_db(
     Ok(())
 }
 
-fn query_table_bytes(conn: &Connection, table_name: &str) -> Result<Option<Vec<u8>>, ExtractError> {
-    let query = fconcat!("SELECT Bytes FROM '", table_name, "' LIMIT 1");
+fn query_table_bytes(conn: &Connection, table_name: &str) -> Result<Vec<Vec<u8>>, ExtractError> {
+    let query = fconcat!("SELECT Bytes FROM '", table_name, "' ORDER BY rowid");
     let mut stmt = conn.prepare(&query)?;
 
-    let mut rows = stmt.query_map([], |row| row.get::<_, Vec<u8>>(0))?;
+    let rows = stmt.query_map([], |row| row.get::<_, Vec<u8>>(0))?;
 
-    match rows.next() {
-        Some(Ok(bytes)) => Ok(Some(bytes)),
-        Some(Err(e)) => Err(e.into()),
-        None => Ok(None)
+    let mut blobs = Vec::new();
+    for row in rows {
+        let bytes = row?;
+        if !bytes.is_empty() {
+            blobs.push(bytes);
+        }
     }
+
+    Ok(blobs)
 }
