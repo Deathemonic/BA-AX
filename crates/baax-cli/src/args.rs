@@ -30,7 +30,18 @@ pub enum Commands {
     Extract {
         #[command(subcommand)]
         extract_type: ExtractType
+    },
+
+    Convert {
+        #[command(subcommand)]
+        convert_type: ConvertType
     }
+}
+
+#[derive(Subcommand)]
+pub enum ConvertType {
+    /// Convert FlatBuffer bytes to JSON
+    Flatbuffer(FlatbufferArgs)
 }
 
 #[derive(Subcommand)]
@@ -102,4 +113,14 @@ pub struct TableArgs {
     /// Decode FlatBuffers
     #[arg(short, long, value_name = "LIBRARY")]
     pub flatbuffer: Option<PathBuf>
+}
+
+#[derive(Parser)]
+pub struct FlatbufferArgs {
+    #[command(flatten)]
+    pub base: BaseExtractArgs,
+
+    /// Flatbuffer plugin library or .flat bundle
+    #[arg(long, value_name = "LIBRARY")]
+    pub flat: PathBuf
 }

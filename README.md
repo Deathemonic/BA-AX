@@ -38,6 +38,10 @@ baax extract media --input some/input/directory/file_molru --output some/output/
 
 # Extracting Excel with FlatBuffer decoding
 baax extract table --input some/input/directory/excel_file.zip --output some/output/directory --flatbuffer gl-123.flat
+
+
+# Converting a raw flatbuffer bytes
+baax convert flatbuffer --input some/input/directory/file.bytes --output some/output/directory --flat gl-123.flat
 ```
 
 ### Flat Files
