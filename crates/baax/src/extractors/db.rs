@@ -66,7 +66,7 @@ pub async fn extract_db(
             }
         };
 
-        if options.flatbuffer && dump_db_table(&dir, table_name, &blobs).await? {
+        if options.flatbuffer && dump_db_table(&dir, table_name, &blobs, options.output).await? {
             continue;
         }
 

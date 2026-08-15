@@ -87,6 +87,12 @@ pub enum ExtractError {
     #[error(transparent)]
     Zip(#[from] zip::result::ZipError),
 
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+
+    #[error(transparent)]
+    Xlsx(#[from] rust_xlsxwriter::XlsxError),
+
     #[error("Failed to get file extension")]
     FileExtension,
 

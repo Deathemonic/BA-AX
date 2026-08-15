@@ -49,7 +49,9 @@ impl CommandHandler {
 
     async fn handle_convert(convert_type: ConvertType) -> Result<()> {
         match convert_type {
-            ConvertType::Flatbuffer(flatbuffer_args) => Self::execute_flatbuffer_conversion(flatbuffer_args).await,
+            ConvertType::Flatbuffer(flatbuffer_args) => {
+                Self::execute_flatbuffer_conversion(flatbuffer_args).await
+            }
             ConvertType::Pack(pack_args) => Self::execute_pack_conversion(pack_args).await
         }
     }
@@ -85,7 +87,8 @@ impl CommandHandler {
         let options = ExtractOptions::new(mode)
             .with_key(args.key.as_deref())
             .with_license(args.license.as_deref())
-            .with_flatbuffer(args.flatbuffer.is_some());
+            .with_flatbuffer(args.flatbuffer.is_some())
+            .with_output(args.format.into());
 
         Self::execute_extraction(&args.base.input, &args.base.output, options).await?;
 
@@ -95,7 +98,7 @@ impl CommandHandler {
     async fn execute_flatbuffer_conversion(args: FlatbufferArgs) -> Result<()> {
         loader::load(&args.flat)?;
         info!(version = loader::version()?, "Loaded flatbuffer plugin");
-        convert_flatbuffer(&args.base.input, &args.base.output).await?;
+        convert_flatbuffer(&args.base.input, &args.base.output, args.format.into()).await?;
 
         Ok(())
     }

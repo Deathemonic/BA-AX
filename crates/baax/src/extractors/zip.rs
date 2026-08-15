@@ -5,6 +5,7 @@ use baad_utils::{debug, info};
 use strum::EnumString;
 use tokio::fs;
 
+use crate::converters::output::OutputFormat;
 use crate::error::ExtractError;
 use crate::extractors::db::extract_db;
 use crate::extractors::dump::dump_bytes;
@@ -50,7 +51,8 @@ pub async fn extract_zip(
     path: impl AsRef<Path>,
     output: impl AsRef<Path>,
     lowercase: bool,
-    flatbuffer: bool
+    flatbuffer: bool,
+    format: OutputFormat
 ) -> Result<(), ExtractError> {
     let path = path.as_ref();
     let buf = fs::read(path).await?;
@@ -67,7 +69,7 @@ pub async fn extract_zip(
     fs::create_dir_all(&dir).await?;
 
     for (name, mut buf) in zip.extract_all()? {
-        if flatbuffer && dump_bytes(&dir, &name, &mut buf).await? {
+        if flatbuffer && dump_bytes(&dir, &name, &mut buf, format).await? {
             continue;
         }
 
@@ -139,7 +141,9 @@ pub async fn extract_file(
     }
 
     match kind {
-        FileKind::Zip => extract_zip(path, output, options.lowercase, options.flatbuffer).await,
+        FileKind::Zip => {
+            extract_zip(path, output, options.lowercase, options.flatbuffer, options.output).await
+        }
         FileKind::Db => extract_db(path, output, options).await,
         FileKind::Molru => extract_pack(path, output).await
     }

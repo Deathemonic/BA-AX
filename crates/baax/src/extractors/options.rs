@@ -1,5 +1,7 @@
 use strum::{Display, EnumString};
 
+use crate::converters::output::OutputFormat;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Display, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum ArchiveFormat {
@@ -21,6 +23,7 @@ pub enum ExtractionMode {
 pub struct ExtractOptions<'a> {
     pub mode: ExtractionMode,
     pub format: ArchiveFormat,
+    pub output: OutputFormat,
     pub lowercase: bool,
     pub flatbuffer: bool,
     pub key: Option<&'a str>,
@@ -32,11 +35,17 @@ impl<'a> ExtractOptions<'a> {
         Self {
             mode,
             format: ArchiveFormat::Auto,
+            output: OutputFormat::Json,
             lowercase: false,
             flatbuffer: false,
             key: None,
             license: None
         }
+    }
+
+    pub const fn with_output(mut self, output: OutputFormat) -> Self {
+        self.output = output;
+        self
     }
 
     pub const fn with_lowercase(mut self, lowercase: bool) -> Self {

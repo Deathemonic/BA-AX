@@ -186,6 +186,7 @@ dependencies = [
  "memmap2",
  "rand_mt",
  "rusqlite",
+ "rust_xlsxwriter",
  "serde",
  "serde_json",
  "strum",
@@ -1884,6 +1885,15 @@ dependencies = [
  "libsqlite3-sys",
  "smallvec",
  "sqlite-wasm-rs",
+]
+
+[[package]]
+name = "rust_xlsxwriter"
+version = "0.97.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "210c9bee5c2d1df2c3a4fa1fccf3647a37bea205a35d5775491731b271bff19b"
+dependencies = [
+ "zip",
 ]
 
 [[package]]

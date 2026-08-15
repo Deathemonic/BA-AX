@@ -3,12 +3,14 @@ use std::path::Path;
 use baad_utils::info;
 use tokio::fs;
 
+use crate::converters::output::OutputFormat;
 use crate::error::ExtractError;
 use crate::extractors::dump::{dump_bytes, dump_db_table};
 
 pub async fn convert_flatbuffer(
     input: impl AsRef<Path>,
-    output: impl AsRef<Path>
+    output: impl AsRef<Path>,
+    format: OutputFormat
 ) -> Result<(), ExtractError> {
     let input = input.as_ref();
     let output = output.as_ref();
@@ -21,7 +23,7 @@ pub async fn convert_flatbuffer(
     fs::create_dir_all(output).await?;
 
     let mut bytes = fs::read(input).await?;
-    if !dump(output, filename, &mut bytes).await? {
+    if !dump(output, filename, &mut bytes, format).await? {
         return Err(ExtractError::UnsupportedFileType);
     }
 
@@ -32,14 +34,15 @@ pub async fn convert_flatbuffer(
 async fn dump(
     output: impl AsRef<Path>,
     filename: &str,
-    bytes: &mut [u8]
+    bytes: &mut [u8],
+    format: OutputFormat
 ) -> Result<bool, ExtractError> {
     let table_name = filename.trim_end_matches(".bytes");
     if table_name.ends_with("DBSchema") {
-        return dump_db_table(output, table_name, &split_rows(bytes)).await;
+        return dump_db_table(output, table_name, &split_rows(bytes), format).await;
     }
 
-    dump_bytes(output, filename, bytes).await
+    dump_bytes(output, filename, bytes, format).await
 }
 
 fn split_rows(bytes: &[u8]) -> Vec<Vec<u8>> {

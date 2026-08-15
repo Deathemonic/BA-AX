@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use baax::converters::OutputFormat;
 use baax::extractors::ArchiveFormat;
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -79,6 +80,25 @@ impl From<Format> for ArchiveFormat {
     }
 }
 
+#[derive(Debug, Default, Clone, Copy, ValueEnum)]
+pub enum DataFormat {
+    /// Write decoded tables as JSON
+    #[default]
+    Json,
+
+    /// Write decoded tables as Excel spreadsheets
+    Xlsx
+}
+
+impl From<DataFormat> for OutputFormat {
+    fn from(format: DataFormat) -> Self {
+        match format {
+            DataFormat::Json => Self::Json,
+            DataFormat::Xlsx => Self::Xlsx
+        }
+    }
+}
+
 #[derive(Parser)]
 pub struct BaseExtractArgs {
     // Input file or folder to extract media from
@@ -115,7 +135,11 @@ pub struct TableArgs {
 
     /// Decode FlatBuffers
     #[arg(short, long, value_name = "LIBRARY")]
-    pub flatbuffer: Option<PathBuf>
+    pub flatbuffer: Option<PathBuf>,
+
+    /// Output format for decoded tables
+    #[arg(long, value_name = "FORMAT", default_value = "json", requires = "flatbuffer")]
+    pub format: DataFormat
 }
 
 #[derive(Parser)]
@@ -125,5 +149,9 @@ pub struct FlatbufferArgs {
 
     /// Flatbuffer plugin library or .flat bundle
     #[arg(long, value_name = "LIBRARY")]
-    pub flat: PathBuf
+    pub flat: PathBuf,
+
+    /// Output format for decoded tables
+    #[arg(long, value_name = "FORMAT", default_value = "json", requires = "flat")]
+    pub format: DataFormat
 }
