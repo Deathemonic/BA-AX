@@ -57,7 +57,7 @@ pub async fn extract_zip(
     let filename =
         path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
 
-    let zip_filename = if lowercase { filename.to_lowercase() } else { filename.to_string() };
+    let zip_filename = if lowercase { filename.to_lowercase() } else { filename.into() };
 
     let mut zip = TableZipFile::new(buf, zip_filename)?;
     let dir = output.as_ref().join(filename.trim_end_matches(".zip"));

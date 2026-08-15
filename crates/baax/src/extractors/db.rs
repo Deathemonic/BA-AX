@@ -56,7 +56,7 @@ pub async fn extract_db(
     for table_name in &table_names {
         let blobs = match query_table_bytes(&conn, table_name) {
             Ok(blobs) if blobs.is_empty() => {
-                warn!(table = table_name, "Table is empty, skipping");
+                warn!(table_name, "Table is empty, skipping");
                 continue;
             }
             Ok(blobs) => blobs,

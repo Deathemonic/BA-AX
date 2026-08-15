@@ -39,7 +39,7 @@ pub async fn dump_db_table(
 ) -> Result<bool, ExtractError> {
     let api = api()?;
     let Some(row_type) = api.resolve_row(table_name)? else {
-        warn!(table = table_name, "No flatbuffer schema matches, keeping raw bytes");
+        warn!(table_name, "No flatbuffer schema matches, keeping raw bytes");
         return Ok(false);
     };
 
