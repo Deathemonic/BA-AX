@@ -1,4 +1,5 @@
 /target
 /output
 /.idea
+/.cargo
 /tablebundles

@@ -2,12 +2,10 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 
-use baad_core::{debug, info};
 use bacy::crypto::aes;
 use bacy::hash::sha;
 use memmap2::Mmap;
 use serde::Deserialize;
-use tokio::fs;
 
 use crate::error::ExtractError;
 
@@ -80,47 +78,4 @@ impl PackFile {
     pub fn len(&self) -> usize { self.index.len() }
 
     pub fn is_empty(&self) -> bool { self.index.is_empty() }
-}
-
-pub async fn extract_pack<P1: AsRef<Path>, P2: AsRef<Path>>(
-    path: P1,
-    output: P2
-) -> Result<(), ExtractError> {
-    let path = path.as_ref();
-    let filename =
-        path.file_name().ok_or(ExtractError::FileName)?.to_str().ok_or(ExtractError::FromString)?;
-
-    let pack = PackFile::open(path)?;
-    let dir = output.as_ref().join(filename.trim_end_matches(".molru"));
-
-    debug!(from = filename, to = %dir.display(), "Extracting");
-
-    fs::create_dir_all(&dir).await?;
-
-    for (name, data) in pack.entries() {
-        let out = dir.join(name);
-        if let Some(parent) = out.parent() {
-            fs::create_dir_all(parent).await?;
-        }
-        fs::write(out, data).await?;
-    }
-
-    info!(success = true, filename, "Extracted");
-    Ok(())
-}
-
-pub async fn extract_all_packs<P1: AsRef<Path>, P2: AsRef<Path>>(
-    input: P1,
-    output: P2
-) -> Result<(), ExtractError> {
-    for entry in input.as_ref().read_dir()? {
-        let entry = entry?;
-        let path = entry.path();
-
-        if path.extension().and_then(|e| e.to_str()) == Some("molru") {
-            extract_pack(&path, &output).await?;
-        }
-    }
-
-    Ok(())
 }

@@ -14,21 +14,59 @@ You can download the latest pre-build binaries at [Releases](https://github.com/
 
 ### Cargo
 ```shell
-cargo install --git "https://github.com/Deathemonic/BA-AX" --locked --release
+cargo install --git "https://github.com/Deathemonic/BA-AX" --locked baax-cli
 ```
 
 ## Usage
 
 ```shell
 # Extracting MediaResources
-baax extract media --input some/input/directory/file.zip --output some/output/directory
+baax extract media --input BGM.zip --output ./output
+
 # Extracting Global PC MediaResources
-baax extract pack --input some/input/directory/file.molru --output some/output/directory
+baax extract media --input BGM.molru --output ./output
 
 # Extracting TableBundles
-baax extract table --input some/input/directory/file.zip --output some/output/directory
-baax extract table --input some/input/directory/file.db --output some/output/directory --key "0000..."
+baax extract table --input Excel.zip --output ./output
+
+# Extracting DB using a SQLCipher key (Hex)
+baax extract table --input ExcelDB.db --output ./output --key "0000..."
+
+
+# Extracting MediaResources explicit format (available: auto (default) | zip | pack)
+baax extract media --input BGM.nolru --output ./output --format pack
+
+# Extracting Excel with FlatBuffer decoding
+baax extract table --input Excel.zip --output ./output --flatbuffer gl-123.flat
+
+# Extracting Excel with explicit format (available: json (default) | xlsx)
+baax extract table --input ExcelDB.db --output ./output --flatbuffer gl-123.flat --key "0000..." --format xlsx
+
+
+# Converting a raw flatbuffer bytes
+baax convert flatbuffer --input file.bytes --output ./output --flat gl-123.flat
+
+# Converting raw to custom format (available: json (default) | xlsx)
+baax convert flatbuffer --input file.bytes --output ./output --flat gl-123.flat --format xlsx
+
+# Convert pack files back to regular zip files
+baax convert pack --input file.molru --output ./output
+
 ```
+
+### Flat Files
+
+You can find `.flat` files here: https://github.com/Deathemonic/BA-TG/releases.
+You need to match the `.flat` files and version of excel you are decoding if not it will result on a inaccurate or fail dump.
+
+To know which one is the correct flat you can use this schema:
+
+```
+japan-1.71.449178.flat
+  ^         ^
+Region  Game Version
+```
+
 
 ## Building
 
@@ -45,17 +83,13 @@ cargo build
 
 ## Library
 ```toml
-baad = { git = "https://github.com/Deathemonic/BA-AX" }
+baax = { git = "https://github.com/Deathemonic/BA-AX" }
 ```
 
 ### FAQ
 
 Why it doesn't do repack?
 > Sole purpose of `BA-AX` just just for extracting.
-
-Why there's no FlatBuffers and MemoryPack extract?
-> Adding those requires `BA-AX` to release a new version each time the game updates.
-> I need a way to have the Flatbuffer updates separate from `BA-AX`.
 
 Why this doesn't provide a way to fetch SQLCipher keys?
 > Doing that requires to call to the official game server which this project is not aiming to do.

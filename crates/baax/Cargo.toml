@@ -1,0 +1,26 @@
+[package]
+name = "baax"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+baad-utils = { workspace = true }
+baax-plugin = { workspace = true }
+bacy = { workspace = true }
+
+serde = { workspace = true }
+tokio = { workspace = true }
+
+base64 = "0.23"
+fastcat = "1.1"
+memmap2 = "0.9"
+rand_mt = "6.0"
+rusqlite = { version = "0.40", features = ["bundled-sqlcipher"] }
+rust_xlsxwriter = "0.97"
+serde_json = { version = "1.0", features = ["preserve_order"] }
+strum = { version = "0.28", features = ["derive"] }
+thiserror = "2.0"
+zip = "8.6"
+
+[lints]
+workspace = true
