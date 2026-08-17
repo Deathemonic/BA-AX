@@ -26,6 +26,8 @@ pub async fn extract_db(
 
     let conn = Connection::open(path)?;
 
+    conn.execute_batch("PRAGMA cipher_log_level = NONE;").ok();
+
     if let Some(license) = options.license {
         conn.execute_batch(&fconcat!("PRAGMA cipher_license = '", license, "';\n"))
             .map_err(|_| ExtractError::SqlCipherKey)?;
