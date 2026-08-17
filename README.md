@@ -21,30 +21,36 @@ cargo install --git "https://github.com/Deathemonic/BA-AX" --locked baax-cli
 
 ```shell
 # Extracting MediaResources
-baax extract media --input some/input/directory/file.zip --output some/output/directory
+baax extract media --input BGM.zip --output ./output
 
 # Extracting Global PC MediaResources
-baax extract media --input some/input/directory/file.molru --output some/output/directory
+baax extract media --input BGM.molru --output ./output
 
 # Extracting TableBundles
-baax extract table --input some/input/directory/file.zip --output some/output/directory
+baax extract table --input Excel.zip --output ./output
 
 # Extracting DB using a SQLCipher key (Hex)
-baax extract table --input some/input/directory/file.db --output some/output/directory --key "0000..."
+baax extract table --input ExcelDB.db --output ./output --key "0000..."
 
 
 # Extracting MediaResources explicit format (available: auto (default) | zip | pack)
-baax extract media --input some/input/directory/file_molru --output some/output/directory --format pack
+baax extract media --input BGM.nolru --output ./output --format pack
 
 # Extracting Excel with FlatBuffer decoding
-baax extract table --input some/input/directory/excel_file.zip --output some/output/directory --flatbuffer gl-123.flat
+baax extract table --input Excel.zip --output ./output --flatbuffer gl-123.flat
+
+# Extracting Excel with explicit format (available: json (default) | xlsx)
+baax extract table --input ExcelDB.db --output ./output --flatbuffer gl-123.flat --key "0000..." --format xlsx
 
 
 # Converting a raw flatbuffer bytes
-baax convert flatbuffer --input some/input/directory/file.bytes --output some/output/directory --flat gl-123.flat
+baax convert flatbuffer --input file.bytes --output ./output --flat gl-123.flat
+
+# Converting raw to custom format (available: json (default) | xlsx)
+baax convert flatbuffer --input file.bytes --output ./output --flat gl-123.flat --format xlsx
 
 # Convert pack files back to regular zip files
-baax convert pack --input some/input/directory/file.molru --output some/output/directory
+baax convert pack --input file.molru --output ./output
 
 ```
 
