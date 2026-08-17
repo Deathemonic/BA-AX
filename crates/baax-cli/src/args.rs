@@ -42,7 +42,7 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ConvertType {
     /// Convert FlatBuffer bytes to JSON
-    Flatbuffer(FlatbufferArgs),
+    Flatbuffers(FlatbufferArgs),
 
     /// Convert molru pack to zip
     Pack(BaseExtractArgs)
@@ -135,7 +135,7 @@ pub struct TableArgs {
 
     /// Decode FlatBuffers
     #[arg(short, long, value_name = "LIBRARY")]
-    pub flatbuffer: Option<PathBuf>,
+    pub flatbuffers: Option<PathBuf>,
 
     /// Output format for decoded tables
     #[arg(long, value_name = "FORMAT", default_value = "json", requires = "flatbuffer")]
