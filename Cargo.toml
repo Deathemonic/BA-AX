@@ -14,7 +14,7 @@ baax-plugin = { path = "crates/baax-plugin" }
 tokio = { version = "1.53", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 
-baad-utils = { git = "https://github.com/Deathemonic/BA-AD", version = "3.0.0" }
+baad-utils = { git = "https://github.com/Deathemonic/BA-AD", version = "3.1.0", default-features = false, features = ["only_logging"] }
 bacy = { git = "https://github.com/Deathemonic/BA-CY", version = "3.3.2" }
 
 [workspace.lints.clippy]
