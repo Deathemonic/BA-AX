@@ -178,11 +178,10 @@ name = "baax"
 version = "3.0.0"
 dependencies = [
  "baad-utils",
+ "baax-plugin",
  "bacy",
  "base64 0.23.1",
- "crc32fast",
  "fastcat",
- "libloading",
  "memmap2",
  "rand_mt",
  "rusqlite",
@@ -193,7 +192,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "zip",
- "zstd",
 ]
 
 [[package]]
@@ -205,6 +203,17 @@ dependencies = [
  "clap",
  "eyre",
  "tokio",
+]
+
+[[package]]
+name = "baax-plugin"
+version = "3.0.0"
+dependencies = [
+ "crc32fast",
+ "libloading",
+ "memmap2",
+ "thiserror 2.0.16",
+ "zstd",
 ]
 
 [[package]]

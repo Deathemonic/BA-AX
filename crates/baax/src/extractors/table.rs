@@ -18,10 +18,10 @@ impl TableZipFile {
         let hash = xxhash::calculate_hash(filename.as_ref()) as u32;
         let mut rng = MersenneTwister::new(hash);
 
-        let mut next_buf = [0u8; 15];
+        let mut next_buf = [0_u8; 15];
         rng.next_bytes(&mut next_buf);
 
-        let mut password = [0u8; 20];
+        let mut password = [0_u8; 20];
         general_purpose::STANDARD.encode_slice(next_buf, &mut password)?;
 
         let archive = ZipArchive::new(Cursor::new(buf))?;

@@ -1,0 +1,14 @@
+[package]
+name = "baax-plugin"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+crc32fast = "1.5"
+libloading = "0.9"
+memmap2 = "0.9"
+thiserror = "2.0"
+zstd = "0.13"
+
+[lints]
+workspace = true

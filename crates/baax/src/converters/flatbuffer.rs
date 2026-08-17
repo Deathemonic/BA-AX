@@ -47,7 +47,7 @@ async fn dump(
 
 fn split_rows(bytes: &[u8]) -> Vec<Vec<u8>> {
     let mut rows = Vec::new();
-    let mut offset = 0usize;
+    let mut offset = 0_usize;
 
     while offset < bytes.len() {
         let Some(end) = row_end(&bytes[offset..]) else {

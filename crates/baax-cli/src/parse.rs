@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::process;
 
 use baad_utils::info;
 use baax::converters::flatbuffer::convert_flatbuffer;
@@ -26,12 +27,12 @@ pub struct CommandHandler {
 }
 
 impl CommandHandler {
-    fn new(args: Args) -> Result<Self> { Ok(Self { args }) }
+    const fn new(args: Args) -> Self { Self { args } }
 
     async fn handle(self) -> Result<()> {
         let Some(command) = self.args.command else {
             Args::command().print_help()?;
-            std::process::exit(0);
+            process::exit(0);
         };
 
         match command {
@@ -127,6 +128,6 @@ impl CommandHandler {
 }
 
 pub async fn run(args: Args) -> Result<()> {
-    let handler = CommandHandler::new(args)?;
+    let handler = CommandHandler::new(args);
     handler.handle().await
 }

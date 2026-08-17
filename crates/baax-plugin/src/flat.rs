@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::{ErrorKind, Read};
 use std::path::Path;
+use std::str;
 
 use memmap2::Mmap;
 
@@ -24,7 +25,7 @@ struct Entry {
 
 pub fn is_flat(path: &Path) -> Result<bool, FlatError> {
     let mut file = File::open(path)?;
-    let mut magic = [0u8; 4];
+    let mut magic = [0_u8; 4];
     match file.read_exact(&mut magic) {
         Ok(()) => Ok(&magic == MAGIC),
         Err(error) if error.kind() == ErrorKind::UnexpectedEof => Ok(false),
@@ -102,9 +103,8 @@ fn read_header(mmap: &Mmap) -> Result<Vec<Entry>, FlatError> {
     let table = mmap.get(HEADER_FIXED_LEN..table_end).ok_or(FlatError::Invalid)?;
 
     let mut entries = Vec::with_capacity(count);
-    for chunk in table.chunks_exact(ENTRY_SIZE) {
-        let buf: &[u8; ENTRY_SIZE] = chunk.try_into().map_err(|_| FlatError::Invalid)?;
-        entries.push(parse_entry(buf)?);
+    for chunk in table.as_chunks::<ENTRY_SIZE>().0 {
+        entries.push(parse_entry(chunk)?);
     }
 
     Ok(entries)
@@ -116,7 +116,7 @@ fn parse_entry(buf: &[u8; ENTRY_SIZE]) -> Result<Entry, FlatError> {
     if triple[end..].iter().any(|&b| b != 0) {
         return Err(FlatError::Invalid);
     }
-    let target_triple = std::str::from_utf8(&triple[..end])?.to_owned();
+    let target_triple = str::from_utf8(&triple[..end])?.to_owned();
     if target_triple.is_empty() {
         return Err(FlatError::Invalid);
     }

@@ -11,6 +11,7 @@ use libloading::Library;
 
 use crate::error::{FfiError, FlatError};
 use crate::flat;
+use crate::sink::{self, Collector, Sink};
 
 #[repr(C)]
 struct FfiResult {
@@ -23,8 +24,22 @@ type ResolveFn = unsafe extern "C" fn(*const c_char) -> *mut c_char;
 type DumpTableFn = unsafe extern "C" fn(*const c_char, *mut u8, usize) -> FfiResult;
 type DumpRowsFn =
     unsafe extern "C" fn(*const c_char, *const *const u8, *const usize, usize) -> FfiResult;
+type VisitTableFn = unsafe extern "C" fn(*const c_char, *mut u8, usize, *const Sink) -> FfiResult;
+type VisitRowsFn = unsafe extern "C" fn(
+    *const c_char,
+    *const *const u8,
+    *const usize,
+    usize,
+    *const Sink
+) -> FfiResult;
 type FreeFn = unsafe extern "C" fn(*mut c_char);
 type VersionFn = unsafe extern "C" fn() -> *const c_char;
+type SinkInfoFn = unsafe extern "C" fn() -> u32;
+
+struct SinkApi {
+    visit_table: VisitTableFn,
+    visit_rows: VisitRowsFn
+}
 
 pub struct Api {
     _library: Library,
@@ -34,7 +49,8 @@ pub struct Api {
     dump_table: DumpTableFn,
     dump_rows: DumpRowsFn,
     free: FreeFn,
-    version: VersionFn
+    version: VersionFn,
+    sink: Option<SinkApi>
 }
 
 static API: OnceLock<Api> = OnceLock::new();
@@ -51,6 +67,7 @@ impl Api {
             dump_rows: unsafe { symbol(&library, b"baax_dump_rows\0") }?,
             free: unsafe { symbol(&library, b"baax_free_string\0") }?,
             version: unsafe { symbol(&library, b"baax_version\0") }?,
+            sink: unsafe { load_sink(&library) }?,
             _library: library,
             _plugin: path
         })
@@ -77,24 +94,65 @@ impl Api {
         let table = CString::new(table)?;
         let result = unsafe { (self.dump_table)(table.as_ptr(), bytes.as_mut_ptr(), bytes.len()) };
 
-        self.result(result)
+        self.result(&result)
     }
 
     pub fn dump_rows(&self, row_type: &str, blobs: &[&[u8]]) -> Result<String, FfiError> {
         let row_type = CString::new(row_type)?;
-        let mut pointers = Vec::with_capacity(blobs.len());
-        let mut lengths = Vec::with_capacity(blobs.len());
-
-        for blob in blobs {
-            pointers.push(blob.as_ptr());
-            lengths.push(blob.len());
-        }
+        let (pointers, lengths) = split(blobs);
 
         let result = unsafe {
             (self.dump_rows)(row_type.as_ptr(), pointers.as_ptr(), lengths.as_ptr(), blobs.len())
         };
 
-        self.result(result)
+        self.result(&result)
+    }
+
+    pub fn visit_table<C: Collector>(
+        &self,
+        table: &str,
+        bytes: &mut [u8],
+        collector: &mut C
+    ) -> Result<(), FfiError> {
+        let sink = self.sink()?;
+        let table = CString::new(table)?;
+        let hooks = Sink::new(collector);
+
+        let result = unsafe {
+            (sink.visit_table)(table.as_ptr(), bytes.as_mut_ptr(), bytes.len(), &raw const hooks)
+        };
+
+        self.unit(&result)
+    }
+
+    pub fn visit_rows<C: Collector>(
+        &self,
+        row_type: &str,
+        blobs: &[&[u8]],
+        collector: &mut C
+    ) -> Result<(), FfiError> {
+        let sink = self.sink()?;
+        let row_type = CString::new(row_type)?;
+        let (pointers, lengths) = split(blobs);
+        let hooks = Sink::new(collector);
+
+        let result = unsafe {
+            (sink.visit_rows)(
+                row_type.as_ptr(),
+                pointers.as_ptr(),
+                lengths.as_ptr(),
+                blobs.len(),
+                &raw const hooks
+            )
+        };
+
+        self.unit(&result)
+    }
+
+    pub const fn supports_sink(&self) -> bool { self.sink.is_some() }
+
+    fn sink(&self) -> Result<&SinkApi, FfiError> {
+        self.sink.as_ref().ok_or(FfiError::SinkUnsupported)
     }
 
     fn resolve(&self, value: &str, resolver: ResolveFn) -> Result<Option<String>, FfiError> {
@@ -108,9 +166,15 @@ impl Api {
         self.take(result, "resolved type").map(Some)
     }
 
-    fn result(&self, result: FfiResult) -> Result<String, FfiError> {
+    fn result(&self, result: &FfiResult) -> Result<String, FfiError> {
+        self.unit(result)?;
+
+        self.take(result.json, "JSON")
+    }
+
+    fn unit(&self, result: &FfiResult) -> Result<(), FfiError> {
         if result.success != 0 {
-            return self.take(result.json, "JSON");
+            return Ok(());
         }
 
         Err(FfiError::Plugin(self.take(result.error, "error")?.into_boxed_str()))
@@ -122,13 +186,49 @@ impl Api {
         }
 
         let result = unsafe { CStr::from_ptr(value) }.to_str().map(str::to_owned);
-        unsafe { (self.free)(value) };
+        unsafe {
+            (self.free)(value);
+        }
         Ok(result?)
     }
 }
 
 unsafe fn symbol<T: Copy>(library: &Library, name: &[u8]) -> Result<T, libloading::Error> {
     Ok(*unsafe { library.get::<T>(name) }?)
+}
+
+fn split(blobs: &[&[u8]]) -> (Vec<*const u8>, Vec<usize>) {
+    let mut pointers = Vec::with_capacity(blobs.len());
+    let mut lengths = Vec::with_capacity(blobs.len());
+
+    for blob in blobs {
+        pointers.push(blob.as_ptr());
+        lengths.push(blob.len());
+    }
+
+    (pointers, lengths)
+}
+
+unsafe fn load_sink(library: &Library) -> Result<Option<SinkApi>, FfiError> {
+    let Ok(version) = (unsafe { symbol::<SinkInfoFn>(library, b"baax_sink_version\0") }) else {
+        return Ok(None);
+    };
+
+    let version = unsafe { version() };
+    if version != sink::SINK_VERSION {
+        return Err(FfiError::SinkVersion(version));
+    }
+
+    let size = unsafe { symbol::<SinkInfoFn>(library, b"baax_sink_size\0") }?;
+    let size = unsafe { size() };
+    if size != sink::size() {
+        return Err(FfiError::SinkSize(size));
+    }
+
+    Ok(Some(SinkApi {
+        visit_table: unsafe { symbol(library, b"baax_visit_table\0") }?,
+        visit_rows: unsafe { symbol(library, b"baax_visit_rows\0") }?
+    }))
 }
 
 pub fn api() -> Result<&'static Api, FfiError> { API.get().ok_or(FfiError::NotLoaded) }

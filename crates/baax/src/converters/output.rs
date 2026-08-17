@@ -4,6 +4,7 @@ use fastcat::fconcat;
 use strum::{Display, EnumString};
 use tokio::fs;
 
+use crate::converters::sheet::Sheet;
 use crate::converters::xlsx::to_xlsx;
 use crate::error::ExtractError;
 
@@ -17,14 +18,12 @@ pub enum OutputFormat {
     Xlsx
 }
 
-impl OutputFormat {
-    fn encode(self, json: String, name: &str) -> Result<Vec<u8>, ExtractError> {
-        match self {
-            Self::Json => Ok(json.into_bytes()),
-            Self::Xlsx => to_xlsx(&json, name)
-        }
-    }
+pub enum Output {
+    Json(String),
+    Sheet(Sheet)
+}
 
+impl OutputFormat {
     const fn extension(self) -> &'static str {
         match self {
             Self::Json => ".json",
@@ -40,6 +39,22 @@ impl OutputFormat {
     }
 }
 
+impl Output {
+    const fn format(&self) -> OutputFormat {
+        match self {
+            Self::Json(_) => OutputFormat::Json,
+            Self::Sheet(_) => OutputFormat::Xlsx
+        }
+    }
+
+    fn encode(self, name: &str) -> Result<Vec<u8>, ExtractError> {
+        match self {
+            Self::Json(json) => Ok(json.into_bytes()),
+            Self::Sheet(sheet) => to_xlsx(&sheet, name)
+        }
+    }
+}
+
 pub fn base_name(name: &str) -> &str {
     SUFFIXES
         .iter()
@@ -47,15 +62,11 @@ pub fn base_name(name: &str) -> &str {
         .unwrap_or(name)
 }
 
-pub async fn write(
-    dir: impl AsRef<Path>,
-    name: &str,
-    json: String,
-    format: OutputFormat
-) -> Result<(), ExtractError> {
+pub async fn write(dir: impl AsRef<Path>, name: &str, output: Output) -> Result<(), ExtractError> {
+    let format = output.format();
     let stem = format.stem(name);
-    let bytes = format.encode(json, stem)?;
     let path = dir.as_ref().join(fconcat!(stem, format.extension()));
+    let bytes = output.encode(stem)?;
 
     Ok(fs::write(path, bytes).await?)
 }

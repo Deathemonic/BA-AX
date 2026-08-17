@@ -28,8 +28,8 @@ impl FileKind {
 
     const fn format(self) -> ArchiveFormat {
         match self {
-            FileKind::Zip | FileKind::Db => ArchiveFormat::Zip,
-            FileKind::Molru => ArchiveFormat::Pack
+            Self::Zip | Self::Db => ArchiveFormat::Zip,
+            Self::Molru => ArchiveFormat::Pack
         }
     }
 
@@ -40,9 +40,9 @@ impl FileKind {
         format_matches
             && matches!(
                 (self, options.mode),
-                (FileKind::Zip, ExtractionMode::MediaResources | ExtractionMode::Tables)
-                    | (FileKind::Db, ExtractionMode::Tables)
-                    | (FileKind::Molru, ExtractionMode::MediaResources | ExtractionMode::Packs)
+                (Self::Zip, ExtractionMode::MediaResources | ExtractionMode::Tables)
+                    | (Self::Db, ExtractionMode::Tables)
+                    | (Self::Molru, ExtractionMode::MediaResources | ExtractionMode::Packs)
             )
     }
 }
