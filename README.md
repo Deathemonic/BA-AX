@@ -89,10 +89,10 @@ baax = { git = "https://github.com/Deathemonic/BA-AX" }
 ### FAQ
 
 Why it doesn't do repack?
-> Sole purpose of `BA-AX` just just for extracting.
+> Sole purpose of `BA-AX` is just for extracting, and will have no plans for it in the future.
 
 Why this doesn't provide a way to fetch SQLCipher keys?
-> Doing that requires to call to the official game server which this project is not aiming to do.
+> Doing that requires to call to the official GameServer which this project is not aiming to do.
 
 ### Other Projects
 - [BA-AD](https://github.com/Deathemonic/BA-AD): A tool and library that downloads the latest **Blue Archive** assets.
